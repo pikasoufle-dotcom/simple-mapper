@@ -1,0 +1,14 @@
+# 1. Créer l'arborescence
+mkdir -p simple-mapper/{vendor,assets,docs,legal,demos}
+cd simple-mapper
+
+# 2. Créer tous les fichiers ci-dessus (copier-coller depuis ce message)
+
+# 3. Télécharger les dépendances
+curl -L -o vendor/three.module.js https://unpkg.com/three@0.160.0/build/three.module.js
+curl -L -o vendor/jszip.min.js https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js
+
+# 4. Lancer en local
+python -m http.server 8002
+
+# 5. Ouvrir http://localhost:8002

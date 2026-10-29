@@ -1,0 +1,50 @@
+{
+  "name": "simple-mapper",
+  "version": "1.0.0",
+  "description": "Projection mapping sans complexité — application navigateur open-source",
+  "type": "module",
+  "main": "app.html",
+  "homepage": "https://github.com/votre-org/simple-mapper",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/votre-org/simple-mapper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/votre-org/simple-mapper/issues"
+  },
+  "license": "MIT",
+  "author": "Simple Mapper Contributors",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "build:offline": "node scripts/build.js --offline",
+    "build:lite": "node scripts/build.js --lite",
+    "build:keep": "node scripts/build.js --keep",
+    "watch": "node scripts/build.js --watch",
+    "watch:offline": "node scripts/build.js --offline --watch",
+    "clean": "node -e \"const fs=require('fs');if(fs.existsSync('dist'))fs.rmSync('dist',{recursive:true,force:true});console.log('✓ dist/ supprimé')\"",
+    "vendor": "node scripts/vendor.js",
+    "serve": "npx --yes serve -p 8000 .",
+    "serve:dist": "npx --yes serve -p 8000 dist",
+    "deploy": "node scripts/deploy.js",
+    "deploy:github": "node scripts/deploy.js --github",
+    "deploy:netlify": "node scripts/deploy.js --netlify",
+    "deploy:both": "node scripts/deploy.js --github --netlify",
+    "deploy:lite": "node scripts/deploy.js --lite"
+  },
+  "devDependencies": {
+    "archiver": "^6.0.2"
+  },
+  "keywords": [
+    "projection-mapping",
+    "mapping",
+    "projector",
+    "three.js",
+    "webgl",
+    "vj",
+    "creative-coding",
+    "open-source"
+  ]
+}

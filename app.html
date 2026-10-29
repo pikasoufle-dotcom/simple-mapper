@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple Mapper</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0}
+#editor-app{display:flex;flex-direction:column;height:100vh}
+#toolbar{display:flex;gap:6px;padding:10px 14px;flex-wrap:wrap;background:#252525;border-bottom:1px solid #333;align-items:center;z-index:10}
+#toolbar .title{font-weight:700;font-size:14px;margin-right:8px}
+#toolbar .divider{width:1px;height:20px;background:#444;margin:0 4px}
+#toolbar button,#toolbar select{padding:7px 11px;border:none;border-radius:6px;background:#3a3a3a;color:#e0e0e0;cursor:pointer;font-size:13px}
+#toolbar button:hover{background:#4a4a4a}
+#toolbar button.primary{background:#4a7aff}#toolbar button.primary:hover{background:#5a8aff}
+#toolbar button.danger{background:#7a3a3a}#toolbar button.danger:hover{background:#8a4a4a}
+#toolbar button.active{background:#ff6a6a}
+#toolbar .spacer{flex:1}
+#main{display:flex;flex:1;overflow:hidden}
+#sidebar{width:280px;background:#222;border-right:1px solid #333;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
+#sidebar h3{padding:11px 14px;font-size:11px;text-transform:uppercase;color:#888;letter-spacing:.8px;background:#1e1e1e;border-top:1px solid #333;border-bottom:1px solid #333}
+#sidebar h3:first-child{border-top:none}
+#surface-list,#projector-list,#media-library{overflow-y:auto;max-height:30vh}
+.surface-item{padding:10px 14px;border-bottom:1px solid #2a2a2a;cursor:pointer;display:flex;align-items:center;gap:10px;font-size:13px}
+.surface-item:hover{background:#2a2a2a}
+.surface-item.selected{background:#2e3d5e;border-left:3px solid #4a7aff;padding-left:11px}
+.surface-item .dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+.surface-item .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.surface-item .del{color:#666;font-size:18px;line-height:1;padding:0 4px;border-radius:4px;opacity:0;cursor:pointer}
+.surface-item:hover .del{opacity:1}.surface-item .del:hover{color:#ff6a6a;background:#333}
+.empty-hint{padding:16px 14px;color:#666;font-size:12px;text-align:center;line-height:1.7}
+.projector-item{padding:10px 14px;border-bottom:1px solid #2a2a2a;font-size:12px}
+.projector-item .header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.projector-item .header .title{flex:1;font-weight:600;font-size:13px}
+.projector-item .header .dot{width:8px;height:8px;border-radius:50%;background:#4aff8a}
+.projector-item .header .del{color:#666;font-size:18px;cursor:pointer;padding:0 4px;border-radius:4px}
+.projector-item .header .del:hover{color:#ff6a6a;background:#333}
+.projector-item .controls{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.projector-item .controls label{display:flex;align-items:center;gap:4px;color:#999;font-size:11px}
+.projector-item .controls input{width:100%;padding:3px 5px;background:#333;color:#e0e0e0;border:1px solid #444;border-radius:4px;font-size:11px}
+.projector-item .blend-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.projector-item .blend-row label{display:flex;align-items:center;gap:4px;color:#777;font-size:10px}
+.projector-item .blend-row input[type=range]{width:100%;accent-color:#4a7aff;height:16px}
+.projector-item .actions{display:flex;gap:6px;margin-top:8px}
+.projector-item .actions button{flex:1;padding:6px;border:none;border-radius:5px;background:#3a5a8a;color:#fff;cursor:pointer;font-size:11px}
+.projector-item .actions button:hover{background:#4a6a9a}
+#add-projector{padding:11px 14px;background:#2a3a5a;color:#9ac;border:none;cursor:pointer;width:100%;font-size:12px;font-weight:600}
+#add-projector:hover{background:#3a4a6a}
+#canvas-wrap{flex:1;position:relative;background:#111;overflow:hidden}
+#editor-canvas{display:block;width:100%;height:100%;touch-action:none}
+#drop-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:#444;font-size:14px;text-align:center;line-height:1.8;padding:20px}
+#properties{position:absolute;bottom:14px;left:14px;background:rgba(30,30,30,.95);border:1px solid #444;border-radius:10px;padding:12px 16px;font-size:12px;display:none;gap:10px;align-items:center;flex-wrap:wrap;backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:calc(100% - 28px)}
+#properties.visible{display:flex}
+#properties label{color:#999;font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:4px}
+#properties input[type=range]{width:80px;accent-color:#4a7aff}
+#properties input[type=color]{width:32px;height:26px;border:1px solid #555;background:none;cursor:pointer;border-radius:4px;padding:1px}
+#properties input[type=number]{width:60px;padding:4px 6px;background:#333;color:#e0e0e0;border:1px solid #444;border-radius:4px;font-size:11px}
+#properties input[type=checkbox]{accent-color:#4a7aff}
+#properties .value{color:#ccc;min-width:32px;font-variant-numeric:tabular-nums;font-size:11px}
+#properties select{padding:4px 6px;background:#333;color:#e0e0e0;border:1px solid #444;border-radius:4px;font-size:12px}
+#properties button{padding:5px 11px;border:none;border-radius:5px;background:#3a3a3a;color:#e0e0e0;cursor:pointer;font-size:12px}
+#properties button:hover{background:#4a4a4a}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120px);background:#333;color:#fff;padding:11px 22px;border-radius:8px;font-size:13px;transition:transform .35s cubic-bezier(.2,.9,.3,1.2);z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.5);max-width:80vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#output-app{display:none;position:fixed;inset:0;background:#000}
+body.output-mode #editor-app{display:none}
+body.output-mode #output-app{display:block}
+#output-canvas{display:block;width:100vw;height:100vh;background:#000}
+#output-fullscreen{position:fixed;top:14px;right:14px;z-index:200;padding:9px 16px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;cursor:pointer;font-size:12px;opacity:.5;transition:opacity .2s}
+#output-fullscreen:hover{opacity:1;background:rgba(200,50,50,.7)}
+body.output-mode:fullscreen #output-fullscreen{display:none}
+#output-label{position:fixed;top:14px;left:14px;z-index:200;padding:9px 16px;background:rgba(0,0,0,.5);color:#fff;border-radius:8px;font-size:12px;opacity:.5;transition:opacity .4s;pointer-events:none}
+body.output-mode #output-label{opacity:1}
+body.output-mode.identified #output-label{opacity:0}
+#tutorial{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center}
+#tutorial.visible{display:flex}
+#tutorial .card{background:#2a2a2a;border-radius:12px;padding:28px 32px;max-width:460px;border:1px solid #444;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#tutorial h2{font-size:20px;margin-bottom:14px}
+#tutorial p{font-size:14px;color:#bbb;line-height:1.6;margin-bottom:16px}
+#tutorial .steps{display:flex;gap:6px;margin-bottom:18px}
+#tutorial .steps .step{flex:1;height:4px;background:#444;border-radius:2px}
+#tutorial .steps .step.active{background:#4a7aff}
+#tutorial .actions{display:flex;gap:10px;justify-content:flex-end}
+#tutorial button{padding:9px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;background:#4a4a4a;color:#e0e0e0}
+#tutorial button.primary{background:#4a7aff;color:#fff}
+#tutorial button.primary:hover{background:#5a8aff}
+@media (pointer:coarse){
+#toolbar button,#toolbar select{padding:10px 14px;font-size:14px}
+.surface-item{padding:14px 16px;font-size:14px}
+.surface-item .del{opacity:.6;padding:0 8px}
+#properties button,#properties select{padding:9px 14px;font-size:14px}
+#properties input[type=range]{width:100px;height:28px}
+#properties input[type=number]{padding:6px 8px;font-size:14px}
+#properties label{font-size:13px}
+.projector-item .controls input{padding:6px 8px;font-size:13px}
+.projector-item .actions button{padding:10px;font-size:13px}
+.projector-item .header .del{padding:6px 10px}
+}
+</style>
+</head>
+<body>
+<div id="editor-app">
+<div id="toolbar">
+<span class="title">🎯 Simple Mapper</span>
+<button id="add-surface" title="Nouvelle surface">+ Surface</button>
+<button id="add-circle" title="Surface en cercle">◯ Cercle</button>
+<button id="add-text" title="Surface texte">T Texte</button>
+<button id="add-media" title="Importer un média">+ Média</button>
+<button id="import-url" title="Depuis une URL">URL…</button>
+<span class="divider"></span>
+<button id="undo-btn" title="Ctrl+Z">↶</button>
+<button id="redo-btn" title="Ctrl+Y">↷</button>
+<span class="divider"></span>
+<button id="save-project" title="Export ZIP">💾 Enregistrer</button>
+<button id="load-project" title="Importer un projet">📁 Ouvrir</button>
+<span class="divider"></span>
+<label style="color:#888;font-size:12px;display:flex;align-items:center;gap:6px;">Format :
+<select id="aspect-select">
+<option value="1.7778">16:9</option>
+<option value="1.3333">4:3</option>
+<option value="2.35">2.35:1</option>
+<option value="3.5556">32:9 (dual)</option>
+<option value="1">1:1</option>
+</select>
+</label>
+<div class="spacer"></div>
+<button id="blackout" class="danger">⬛ Blackout</button>
+<button id="output-btn" class="primary">▶ Sortie simple</button>
+</div>
+<div id="main">
+<div id="sidebar">
+<h3>Surfaces</h3>
+<div id="surface-list"></div>
+<h3>Bibliothèque</h3>
+<div id="media-library"></div>
+<h3>Projecteurs</h3>
+<div id="projector-list"></div>
+<button id="add-projector">+ Ajouter un projecteur</button>
+</div>
+<div id="canvas-wrap">
+<canvas id="editor-canvas"></canvas>
+<div id="drop-hint">Glissez une image ou une vidéo ici<br>pour créer une surface automatiquement</div>
+<div id="properties">
+<label>Couleur <input type="color" id="prop-color" value="#ffffff"></label>
+<label>Opacité <input type="range" id="prop-opacity" min="0" max="100" value="100"><span class="value" id="prop-opacity-val">100%</span></label>
+<label>Grille <select id="prop-grid">
+<option value="2">2×2</option><option value="3" selected>3×3</option>
+<option value="4">4×4</option><option value="5">5×5</option>
+<option value="6">6×6</option><option value="8">8×8</option>
+</select></label>
+<label><input type="checkbox" id="prop-mirror-x"> ↔ Miroir X</label>
+<label><input type="checkbox" id="prop-mirror-y"> ↕ Miroir Y</label>
+<span id="prop-video-controls" style="display:none;gap:6px;align-items:center;">
+<label>In <input type="number" id="prop-in" min="0" step="0.1" value="0"></label>
+<label>Out <input type="number" id="prop-out" min="0" step="0.1" value="0"></label>
+</span>
+<button id="prop-reset">Réinitialiser</button>
+</div>
+</div>
+</div>
+</div>
+<div id="output-app">
+<canvas id="output-canvas"></canvas>
+<div id="output-label">Projecteur</div>
+<button id="output-fullscreen">⛶ Plein écran</button>
+</div>
+<div id="tutorial">
+<div class="card">
+<div class="steps"><div class="step active"></div><div class="step"></div><div class="step"></div></div>
+<h2 id="tut-title">Bienvenue 👋</h2>
+<p id="tut-text"></p>
+<div class="actions">
+<button id="tut-skip">Passer</button>
+<button id="tut-next" class="primary">Suivant</button>
+</div>
+</div>
+</div>
+<div id="toast"></div>
+<input type="file" id="file-input" accept="image/*,video/*" style="display:none" multiple>
+<input type="file" id="project-input" accept="application/json,.json,.zip,application/zip" style="display:none">
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script type="module">
+import * as THREE from 'three';
+const hashParts=location.hash.slice(1).split('&');
+const MODE=hashParts[0]||'editor';
+const HASH_PARAMS=Object.fromEntries(hashParts.slice(1).map(p=>p.split('=').map(decodeURIComponent)));
+const IS_OUTPUT=MODE==='output';
+const PROJECTOR_ID=IS_OUTPUT?parseInt(HASH_PARAMS.projector,10):null;
+const IS_COARSE=window.matchMedia('(pointer: coarse)').matches;
+const HANDLE_RADIUS=IS_COARSE?0.05:0.03;
+const state={surfaces:[],projectors:[],mediaLibrary:[],selectedId:null,nextId:1,nextProjectorId:1,blackout:false,aspect:16/9};
+const scene=new THREE.Scene();
+const editorHelpers=new THREE.Group();
+const editorScene=new THREE.Scene();
+editorScene.add(editorHelpers);
+const projectorPreviewGroup=new THREE.Group();
+editorHelpers.add(projectorPreviewGroup);
+let renderer,camera,blendScene=null,blendCamera=null,blendMaterial=null;
+const canvasEl=IS_OUTPUT?document.getElementById('output-canvas'):document.getElementById('editor-canvas');
+renderer=new THREE.WebGLRenderer({canvas:canvasEl,antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setClearColor(0x111111,1);
+camera=new THREE.OrthographicCamera(-1,1,1,-1,-10,10);
+if(IS_OUTPUT){
+blendScene=new THREE.Scene();blendCamera=new THREE.Camera();
+blendMaterial=new THREE.ShaderMaterial({
+transparent:true,depthTest:false,
+uniforms:{uBlendL:{value:0},uBlendR:{value:0},uBlendT:{value:0},uBlendB:{value:0}},
+vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`,
+fragmentShader:`varying vec2 vUv;uniform float uBlendL,uBlendR,uBlendT,uBlendB;
+void main(){float fade=1.0;
+if(uBlendL>0.001)fade*=smoothstep(0.0,uBlendL,vUv.x);
+if(uBlendR>0.001)fade*=smoothstep(0.0,uBlendR,1.0-vUv.x);
+if(uBlendT>0.001)fade*=smoothstep(0.0,uBlendT,1.0-vUv.y);
+if(uBlendB>0.001)fade*=smoothstep(0.0,uBlendB,vUv.y);
+gl_FragColor=vec4(0.0,0.0,0.0,1.0-fade);}`
+});
+blendScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),blendMaterial));
+}
+class Surface{
+constructor(opts={}){
+this.id=opts.id||state.nextId++;
+this.name=opts.name||`Surface ${this.id}`;
+this.gridW=opts.gridW||3;this.gridH=opts.gridH||3;
+this.color=opts.color||'#4a7aff';this.opacity=opts.opacity??1;
+this.mirrorX=!!opts.mirrorX;this.mirrorY=!!opts.mirrorY;
+this.inPoint=opts.inPoint||0;this.outPoint=opts.outPoint||0;
+this.mediaUrl=null;this.mediaType=null;this.mediaEl=null;this.texture=null;
+this.mesh=null;this.outline=null;this.handles=[];this.objectUrl=null;
+if(opts.points&&opts.points.length===this.gridW*this.gridH)this.points=opts.points.map(p=>({x:p.x,y:p.y}));
+else this.points=this.defaultGrid();
+this.buildMesh();
+if(!IS_OUTPUT)this.buildHelpers();
+}
+defaultGrid(){
+const pts=[];
+for(let y=0;y<this.gridH;y++)for(let x=0;x<this.gridW;x++)
+pts.push({x:-0.5+x/(this.gridW-1),y:0.5-y/(this.gridH-1)});
+return pts;
+}
+buildMesh(){
+if(this.mesh){scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}
+const n=this.gridW*this.gridH;
+const positions=new Float32Array(n*3),uvs=new Float32Array(n*2);
+for(let i=0;i<n;i++){
+const p=this.points[i];positions[i*3]=p.x;positions[i*3+1]=p.y;positions[i*3+2]=0;
+const gx=i%this.gridW,gy=Math.floor(i/this.gridW);
+uvs[i*2]=gx/(this.gridW-1);uvs[i*2+1]=1-gy/(this.gridH-1);
+}
+const indices=[];
+for(let y=0;y<this.gridH-1;y++)for(let x=0;x<this.gridW-1;x++){
+const a=y*this.gridW+x,b=a+1,c=a+this.gridW,d=c+1;
+indices.push(a,b,c,b,d,c);
+}
+const geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+geo.setAttribute('uv',new THREE.BufferAttribute(uvs,2));
+geo.setIndex(indices);
+const mat=new THREE.ShaderMaterial({
+transparent:true,depthTest:false,side:THREE.DoubleSide,
+uniforms:{
+uMap:{value:this.texture},uHasMap:{value:this.texture?1:0},
+uColor:{value:new THREE.Color(this.color)},uOpacity:{value:this.opacity},
+uMirrorX:{value:this.mirrorX?1:0},uMirrorY:{value:this.mirrorY?1:0}
+},
+vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+fragmentShader:`varying vec2 vUv;uniform sampler2D uMap;uniform float uHasMap,uMirrorX,uMirrorY,uOpacity;uniform vec3 uColor;
+void main(){vec2 uv=vUv;
+if(uMirrorX>0.5&&uv.x>0.5)uv.x=1.0-uv.x;
+if(uMirrorY>0.5&&uv.y>0.5)uv.y=1.0-uv.y;
+vec4 t=vec4(1.0);if(uHasMap>0.5)t=texture2D(uMap,uv);
+gl_FragColor=vec4(t.rgb*uColor,t.a*uOpacity);}`
+});
+this.mesh=new THREE.Mesh(geo,mat);
+scene.add(this.mesh);
+}
+refreshGeometry(){
+if(!this.mesh)return;
+const attr=this.mesh.geometry.attributes.position;
+for(let i=0;i<this.points.length;i++){attr.array[i*3]=this.points[i].x;attr.array[i*3+1]=this.points[i].y;}
+attr.needsUpdate=true;this.mesh.geometry.computeBoundingSphere();
+}
+buildHelpers(){
+this.disposeHelpers();
+const outlineGeo=new THREE.BufferGeometry();
+outlineGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(12),3));
+this.outline=new THREE.LineLoop(outlineGeo,new THREE.LineBasicMaterial({color:0x4a7aff,depthTest:false}));
+editorHelpers.add(this.outline);
+const handleGeo=new THREE.CircleGeometry(IS_COARSE?0.035:0.022,14);
+for(let i=0;i<this.points.length;i++){
+const h=new THREE.Mesh(handleGeo,new THREE.MeshBasicMaterial({color:0x4a7aff,depthTest:false}));
+h.userData={surfaceId:this.id,pointIndex:i};
+editorHelpers.add(h);this.handles.push(h);
+}
+this.updateHelpers();
+}
+disposeHelpers(){
+if(this.outline){editorHelpers.remove(this.outline);this.outline.geometry.dispose();this.outline.material.dispose();this.outline=null;}
+this.handles.forEach(h=>editorHelpers.remove(h));this.handles=[];
+}
+updateHelpers(){
+if(!this.outline)return;
+const outer=[this.points[0],this.points[this.gridW-1],this.points[(this.gridH-1)*this.gridW+this.gridW-1],this.points[(this.gridH-1)*this.gridW]];
+const pos=this.outline.geometry.attributes.position;
+outer.forEach((p,i)=>{pos.array[i*3]=p.x;pos.array[i*3+1]=p.y;});
+pos.needsUpdate=true;
+for(let i=0;i<this.points.length;i++)this.handles[i].position.set(this.points[i].x,this.points[i].y,0.5);
+const sel=this.id===state.selectedId;const color=sel?0x4a7aff:0x667788;
+this.outline.material.color.setHex(color);
+this.handles.forEach(h=>{h.material.color.setHex(color);h.visible=sel;});
+}
+setGridResolution(newW,newH){
+if(newW===this.gridW&&newH===this.gridH)return;
+const oldW=this.gridW,oldH=this.gridH,old=this.points,newPoints=[];
+for(let y=0;y<newH;y++)for(let x=0;x<newW;x++){
+const u=newW===1?0.5:x/(newW-1),v=newH===1?0.5:y/(newH-1);
+const fx=u*(oldW-1),fy=v*(oldH-1);
+const x0=Math.floor(fx),y0=Math.floor(fy);
+const x1=Math.min(x0+1,oldW-1),y1=Math.min(y0+1,oldH-1);
+const tx=fx-x0,ty=fy-y0;
+const p00=old[y0*oldW+x0],p10=old[y0*oldW+x1],p01=old[y1*oldW+x0],p11=old[y1*oldW+x1];
+newPoints.push({
+x:(1-tx)*(1-ty)*p00.x+tx*(1-ty)*p10.x+(1-tx)*ty*p01.x+tx*ty*p11.x,
+y:(1-tx)*(1-ty)*p00.y+tx*(1-ty)*p10.y+(1-tx)*ty*p01.y+tx*ty*p11.y
+});
+}
+this.gridW=newW;this.gridH=newH;this.points=newPoints;
+this.buildMesh();
+if(!IS_OUTPUT)this.buildHelpers();
+}
+setMedia(el,type,url){
+this.mediaEl=el;this.mediaType=type;this.mediaUrl=url;
+if(this.texture)this.texture.dispose();
+if(!el){
+this.texture=null;
+if(this.mesh?.material?.uniforms){this.mesh.material.uniforms.uMap.value=null;this.mesh.material.uniforms.uHasMap.value=0;}
+return;
+}
+this.texture=(el instanceof HTMLCanvasElement)?new THREE.CanvasTexture(el):new THREE.Texture(el);
+this.texture.colorSpace=THREE.SRGBColorSpace;
+this.texture.minFilter=THREE.LinearFilter;this.texture.magFilter=THREE.LinearFilter;
+this.texture.needsUpdate=true;
+if(this.mesh?.material?.uniforms){this.mesh.material.uniforms.uMap.value=this.texture;this.mesh.material.uniforms.uHasMap.value=1;}
+}
+update(){
+if(this.mediaType==='video'&&this.mediaEl){
+const t=this.mediaEl.currentTime;const inP=this.inPoint||0;const outP=this.outPoint||0;
+if(inP&&t<inP-0.05)this.mediaEl.currentTime=inP;
+else if(outP&&t>outP)this.mediaEl.currentTime=inP;
+if(!this.mediaEl.paused&&this.texture)this.texture.needsUpdate=true;
+}
+if(this.mesh?.material?.uniforms){
+const u=this.mesh.material.uniforms;
+u.uColor.value.set(this.color);u.uOpacity.value=this.opacity;
+u.uMirrorX.value=this.mirrorX?1:0;u.uMirrorY.value=this.mirrorY?1:0;
+}
+}
+dispose(){
+this.disposeHelpers();
+if(this.mesh){scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}
+if(this.texture)this.texture.dispose();
+if(this.mediaType==='video'&&this.mediaEl){this.mediaEl.pause();this.mediaEl.src='';}
+if(this.objectUrl)URL.revokeObjectURL(this.objectUrl);
+}
+serialize(){
+return{
+id:this.id,name:this.name,gridW:this.gridW,gridH:this.gridH,
+points:this.points.map(p=>({x:p.x,y:p.y})),
+color:this.color,opacity:this.opacity,
+mirrorX:this.mirrorX,mirrorY:this.mirrorY,
+inPoint:this.inPoint,outPoint:this.outPoint,
+mediaUrl:this.mediaUrl,mediaType:this.mediaType
+};
+}
+}
+function loadMediaIntoSurface(surface,url,type){
+return new Promise(resolve=>{
+if(!url||!type){resolve();return;}
+if(type==='image'){
+const img=new Image();img.crossOrigin='anonymous';
+img.onload=()=>{surface.setMedia(img,'image',url);resolve();};
+img.onerror=()=>resolve();
+img.src=url;
+}else if(type==='video'){
+const vid=document.createElement('video');
+vid.crossOrigin='anonymous';vid.loop=true;vid.muted=true;vid.autoplay=true;vid.playsInline=true;
+vid.onloadeddata=()=>{surface.setMedia(vid,'video',url);vid.play().catch(()=>{});resolve();};
+vid.onerror=()=>resolve();
+vid.src=url;
+}else resolve();
+});
+}
+function fileToDataURL(file){
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(reader.result);
+reader.onerror=reject;
+reader.readAsDataURL(file);
+});
+}
+async function urlToDataURL(url){
+if(!url||url.startsWith('data:'))return url;
+try{const resp=await fetch(url);const blob=await resp.blob();return await fileToDataURL(blob);}catch(e){return null;}
+}
+const channel=new BroadcastChannel('simple-mapper-sync');
+function serializeState(){
+return{
+surfaces:state.surfaces.map(s=>s.serialize()),
+projectors:state.projectors.map(p=>({id:p.id,region:{...p.region},blend:{...p.blend}})),
+mediaLibrary:state.mediaLibrary.map(m=>({...m})),
+blackout:state.blackout,aspect:state.aspect,
+nextId:state.nextId,nextProjectorId:state.nextProjectorId
+};
+}
+function broadcast(){
+if(IS_OUTPUT)return;
+channel.postMessage({type:'state',state:serializeState()});
+scheduleAutoSave();
+}
+async function applyState(newState){
+const incomingIds=new Set(newState.surfaces.map(s=>s.id));
+state.surfaces=state.surfaces.filter(s=>{if(incomingIds.has(s.id))return true;s.dispose();return false;});
+for(const sData of newState.surfaces){
+let s=state.surfaces.find(x=>x.id===sData.id);
+if(!s){
+s=new Surface(sData);state.surfaces.push(s);
+if(sData.mediaUrl&&sData.mediaType)loadMediaIntoSurface(s,sData.mediaUrl,sData.mediaType);
+}else{
+const gridChanged=s.gridW!==sData.gridW||s.gridH!==sData.gridH;
+const mediaChanged=s.mediaUrl!==sData.mediaUrl||s.mediaType!==sData.mediaType;
+s.gridW=sData.gridW;s.gridH=sData.gridH;
+s.points=sData.points.map(p=>({...p}));
+s.color=sData.color;s.opacity=sData.opacity;s.name=sData.name;
+if(sData.mirrorX!==undefined)s.mirrorX=sData.mirrorX;
+if(sData.mirrorY!==undefined)s.mirrorY=sData.mirrorY;
+if(sData.inPoint!==undefined)s.inPoint=sData.inPoint;
+if(sData.outPoint!==undefined)s.outPoint=sData.outPoint;
+if(gridChanged){s.buildMesh();if(!IS_OUTPUT)s.buildHelpers();}
+else s.refreshGeometry();
+if(mediaChanged){
+if(sData.mediaUrl&&sData.mediaType)loadMediaIntoSurface(s,sData.mediaUrl,sData.mediaType);
+else s.setMedia(null,null,null);
+}
+if(!IS_OUTPUT)s.updateHelpers();
+}
+}
+state.projectors=newState.projectors.map(p=>({id:p.id,region:{...p.region},blend:{...p.blend}}));
+state.mediaLibrary=(newState.mediaLibrary||[]).map(m=>({...m}));
+state.blackout=newState.blackout;state.aspect=newState.aspect;
+state.nextId=newState.nextId;state.nextProjectorId=newState.nextProjectorId;
+if(IS_OUTPUT){updateOutputCamera();updateBlendUniforms();renderer.setClearColor(0x000000,1);}
+else{rebuildProjectorPreviews();renderSurfaceList();renderMediaLibrary();renderProjectorList();resize();}
+}
+channel.addEventListener('message',e=>{
+const msg=e.data;
+if(IS_OUTPUT&&msg.type==='state')applyState(msg.state);
+else if(!IS_OUTPUT&&msg.type==='hello')channel.postMessage({type:'state',state:serializeState()});
+});
+const history={past:[],future:[]};
+let dragSnapshot=null;
+function snapshot(){return JSON.stringify(serializeState());}
+function pushHistory(snap){
+history.past.push(snap||snapshot());
+if(history.past.length>50)history.past.shift();
+history.future=[];updateHistoryButtons();
+}
+function undo(){
+if(history.past.length===0)return;
+history.future.push(snapshot());
+applyState(JSON.parse(history.past.pop()));
+broadcast();updateHistoryButtons();
+}
+function redo(){
+if(history.future.length===0)return;
+history.past.push(snapshot());
+applyState(JSON.parse(history.future.pop()));
+broadcast();updateHistoryButtons();
+}
+function updateHistoryButtons(){
+if(IS_OUTPUT)return;
+document.getElementById('undo-btn').disabled=history.past.length===0;
+document.getElementById('redo-btn').disabled=history.future.length===0;
+document.getElementById('undo-btn').style.opacity=history.past.length===0?0.4:1;
+document.getElementById('redo-btn').style.opacity=history.future.length===0?0.4:1;
+}
+function editorCamera(){
+const w=canvasEl.clientWidth,h=canvasEl.clientHeight;
+if(w===0||h===0)return;
+const contentAspect=state.aspect,windowAspect=w/h;
+if(windowAspect>contentAspect){camera.left=-windowAspect;camera.right=windowAspect;camera.top=1;camera.bottom=-1;}
+else{camera.left=-contentAspect;camera.right=contentAspect;camera.top=contentAspect/windowAspect;camera.bottom=-contentAspect/windowAspect;}
+camera.updateProjectionMatrix();
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(w,h,false);
+}
+function updateOutputCamera(){
+if(!IS_OUTPUT)return;
+const proj=state.projectors.find(p=>p.id===PROJECTOR_ID);
+if(!proj){camera.left=-state.aspect;camera.right=state.aspect;camera.top=1;camera.bottom=-1;}
+else{
+const a=state.aspect,r=proj.region;
+camera.left=-a+2*a*r.x;camera.right=camera.left+2*a*r.w;
+camera.top=1-2*r.y;camera.bottom=camera.top-2*r.h;
+}
+camera.updateProjectionMatrix();
+}
+function updateBlendUniforms(){
+if(!IS_OUTPUT||!blendMaterial)return;
+const proj=state.projectors.find(p=>p.id===PROJECTOR_ID);
+const b=proj?proj.blend:{left:0,right:0,top:0,bottom:0};
+blendMaterial.uniforms.uBlendL.value=b.left;
+blendMaterial.uniforms.uBlendR.value=b.right;
+blendMaterial.uniforms.uBlendT.value=b.top;
+blendMaterial.uniforms.uBlendB.value=b.bottom;
+}
+function rebuildProjectorPreviews(){
+if(IS_OUTPUT)return;
+while(projectorPreviewGroup.children.length){
+const c=projectorPreviewGroup.children.pop();
+projectorPreviewGroup.remove(c);
+if(c.geometry)c.geometry.dispose();
+if(c.material)c.material.dispose();
+}
+const colors=[0xff6a9a,0x4aff8a,0xffaa4a,0xaa4aff,0x4aeaff];
+state.projectors.forEach((proj,i)=>{
+const a=state.aspect,r=proj.region;
+const x0=-a+2*a*r.x,x1=x0+2*a*r.w;
+const y0=1-2*r.y,y1=y0-2*r.h;
+const pts=[
+new THREE.Vector3(x0,y0,0.4),new THREE.Vector3(x1,y0,0.4),
+new THREE.Vector3(x1,y1,0.4),new THREE.Vector3(x0,y1,0.4),
+new THREE.Vector3(x0,y0,0.4)
+];
+const geo=new THREE.BufferGeometry().setFromPoints(pts);
+const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:colors[i%colors.length],depthTest:false,transparent:true,opacity:0.6}));
+projectorPreviewGroup.add(line);
+});
+}
+function screenToWorld(clientX,clientY){
+const rect=canvasEl.getBoundingClientRect();
+const nx=(clientX-rect.left)/rect.width,ny=(clientY-rect.top)/rect.height;
+return{x:camera.left+nx*(camera.right-camera.left),y:camera.top+ny*(camera.bottom-camera.top)};
+}
+function pointInPolygon(p,corners){
+let inside=false;
+for(let i=0,j=corners.length-1;i<corners.length;j=i++){
+const xi=corners[i].x,yi=corners[i].y,xj=corners[j].x,yj=corners[j].y;
+if(((yi>p.y)!==(yj>p.y))&&(p.x<(xj-xi)*(p.y-yi)/(yj-yi)+xi))inside=!inside;
+}
+return inside;
+}
+let draggingPoint=null,draggingSurface=null;
+if(!IS_OUTPUT){
+canvasEl.addEventListener('pointerdown',e=>{
+const world=screenToWorld(e.clientX,e.clientY);
+const sel=state.surfaces.find(s=>s.id===state.selectedId);
+const r=HANDLE_RADIUS*(camera.right-camera.left)/2;
+if(sel){
+for(let i=0;i<sel.points.length;i++){
+const p=sel.points[i],dx=world.x-p.x,dy=world.y-p.y;
+if(dx*dx+dy*dy<r*r){
+dragSnapshot=snapshot();
+draggingPoint={surface:sel,pointIndex:i};
+canvasEl.setPointerCapture(e.pointerId);
+canvasEl.style.cursor='grabbing';
+return;
+}
+}
+}
+for(let i=state.surfaces.length-1;i>=0;i--){
+const s=state.surfaces[i];
+const outer=[s.points[0],s.points[s.gridW-1],s.points[(s.gridH-1)*s.gridW+s.gridW-1],s.points[(s.gridH-1)*s.gridW]];
+if(pointInPolygon(world,outer)){
+selectSurface(s.id);
+dragSnapshot=snapshot();
+draggingSurface={startX:world.x,startY:world.y,surface:s,orig:s.points.map(p=>({...p}))};
+canvasEl.setPointerCapture(e.pointerId);
+return;
+}
+}
+selectSurface(null);
+});
+canvasEl.addEventListener('pointermove',e=>{
+const world=screenToWorld(e.clientX,e.clientY);
+if(draggingPoint){
+draggingPoint.surface.points[draggingPoint.pointIndex]={x:world.x,y:world.y};
+draggingPoint.surface.refreshGeometry();
+draggingPoint.surface.updateHelpers();
+return;
+}
+if(draggingSurface){
+const dx=world.x-draggingSurface.startX,dy=world.y-draggingSurface.startY;
+for(let i=0;i<draggingSurface.surface.points.length;i++){
+draggingSurface.surface.points[i]={x:draggingSurface.orig[i].x+dx,y:draggingSurface.orig[i].y+dy};
+}
+draggingSurface.surface.refreshGeometry();
+draggingSurface.surface.updateHelpers();
+return;
+}
+const sel=state.surfaces.find(s=>s.id===state.selectedId);
+let hover=false;
+if(sel){
+const r=HANDLE_RADIUS*(camera.right-camera.left)/2;
+for(const p of sel.points){
+const dx=world.x-p.x,dy=world.y-p.y;
+if(dx*dx+dy*dy<r*r){hover=true;break;}
+}
+}
+canvasEl.style.cursor=hover?'grab':'default';
+});
+canvasEl.addEventListener('pointerup',e=>{
+if(draggingPoint||draggingSurface){
+pushHistory(dragSnapshot);
+dragSnapshot=null;draggingPoint=null;draggingSurface=null;
+canvasEl.style.cursor='default';
+broadcast();
+try{canvasEl.releasePointerCapture(e.pointerId);}catch(_){}
+}
+});
+const wrap=document.getElementById('canvas-wrap');
+wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.style.outline='2px dashed #4a7aff';});
+wrap.addEventListener('dragleave',()=>{wrap.style.outline='none';});
+wrap.addEventListener('drop',e=>{e.preventDefault();wrap.style.outline='none';handleFiles(e.dataTransfer.files);});
+}
+function getSelected(){return state.surfaces.find(s=>s.id===state.selectedId)||null;}
+function selectSurface(id){
+state.selectedId=id;
+state.surfaces.forEach(s=>s.updateHelpers());
+if(!IS_OUTPUT){renderSurfaceList();updatePropertiesPanel();}
+}
+function deleteSurface(id){
+const idx=state.surfaces.findIndex(s=>s.id===id);
+if(idx===-1)return;
+pushHistory();
+state.surfaces[idx].dispose();
+state.surfaces.splice(idx,1);
+if(state.selectedId===id)state.selectedId=state.surfaces[0]?.id??null;
+state.surfaces.forEach(s=>s.updateHelpers());
+if(!IS_OUTPUT){renderSurfaceList();updatePropertiesPanel();broadcast();}
+}
+function renderSurfaceList(){
+if(IS_OUTPUT)return;
+const list=document.getElementById('surface-list');
+if(state.surfaces.length===0){
+list.innerHTML='<div class="empty-hint">Aucune surface.<br>Cliquez sur « + Surface »<br>ou glissez un média.</div>';
+document.getElementById('drop-hint').style.display='flex';
+return;
+}
+document.getElementById('drop-hint').style.display='none';
+list.innerHTML='';
+for(const s of state.surfaces){
+const item=document.createElement('div');
+item.className='surface-item'+(s.id===state.selectedId?' selected':'');
+item.innerHTML=`<div class="dot" style="background:${s.color}"></div><div class="name">${escapeHtml(s.name)}</div><div class="del" title="Supprimer">×</div>`;
+item.addEventListener('click',e=>{
+if(e.target.classList.contains('del')){deleteSurface(s.id);return;}
+selectSurface(s.id);
+});
+list.appendChild(item);
+}
+}
+function renderMediaLibrary(){
+if(IS_OUTPUT)return;
+const list=document.getElementById('media-library');
+if(state.mediaLibrary.length===0){
+list.innerHTML='<div class="empty-hint" style="padding:8px 14px;font-size:11px;">Importez des médias pour les réutiliser.</div>';
+return;
+}
+list.innerHTML='';
+state.mediaLibrary.forEach((m,i)=>{
+const item=document.createElement('div');
+item.className='surface-item';
+item.innerHTML=`<div class="dot" style="background:${m.type==='video'?'#ff6a9a':'#4a7aff'}"></div><div class="name">${escapeHtml(m.name)}</div><div class="del" title="Retirer">×</div>`;
+item.addEventListener('click',async e=>{
+if(e.target.classList.contains('del')){state.mediaLibrary.splice(i,1);renderMediaLibrary();return;}
+let s=getSelected();
+if(!s){await spawnSurfaceWithMedia(m.url,m.type,m.name);return;}
+pushHistory();
+await loadMediaIntoSurface(s,m.url,m.type);
+broadcast();
+});
+list.appendChild(item);
+});
+}
+function updatePropertiesPanel(){
+if(IS_OUTPUT)return;
+const panel=document.getElementById('properties');
+const s=getSelected();
+if(!s){panel.classList.remove('visible');return;}
+panel.classList.add('visible');
+document.getElementById('prop-color').value=s.color;
+document.getElementById('prop-opacity').value=Math.round(s.opacity*100);
+document.getElementById('prop-opacity-val').textContent=Math.round(s.opacity*100)+'%';
+document.getElementById('prop-grid').value=s.gridW;
+document.getElementById('prop-mirror-x').checked=s.mirrorX;
+document.getElementById('prop-mirror-y').checked=s.mirrorY;
+const vc=document.getElementById('prop-video-controls');
+if(s.mediaType==='video'){
+vc.style.display='flex';
+document.getElementById('prop-in').value=s.inPoint||0;
+document.getElementById('prop-out').value=s.outPoint||0;
+}else vc.style.display='none';
+}
+function renderProjectorList(){
+if(IS_OUTPUT)return;
+const list=document.getElementById('projector-list');
+if(state.projectors.length===0){
+list.innerHTML='<div class="empty-hint" style="padding:10px 14px;font-size:11px;">Aucun projecteur.<br>Ajoutez-en pour du multi-projecteur.</div>';
+return;
+}
+list.innerHTML='';
+for(const p of state.projectors){
+const item=document.createElement('div');
+item.className='projector-item';
+item.innerHTML=`
+<div class="header"><div class="dot"></div><span class="title">Projecteur ${p.id}</span><span class="del" title="Supprimer">×</span></div>
+<div class="controls">
+<label>X <input type="number" data-pid="${p.id}" data-field="x" value="${p.region.x.toFixed(2)}" step="0.05" min="0" max="1"></label>
+<label>Y <input type="number" data-pid="${p.id}" data-field="y" value="${p.region.y.toFixed(2)}" step="0.05" min="0" max="1"></label>
+<label>W <input type="number" data-pid="${p.id}" data-field="w" value="${p.region.w.toFixed(2)}" step="0.05" min="0" max="1"></label>
+<label>H <input type="number" data-pid="${p.id}" data-field="h" value="${p.region.h.toFixed(2)}" step="0.05" min="0" max="1"></label>
+</div>
+<div class="blend-row">
+<label>G <input type="range" data-pid="${p.id}" data-field="blendL" min="0" max="0.5" step="0.01" value="${p.blend.left}"></label>
+<label>D <input type="range" data-pid="${p.id}" data-field="blendR" min="0" max="0.5" step="0.01" value="${p.blend.right}"></label>
+<label>H <input type="range" data-pid="${p.id}" data-field="blendT" min="0" max="0.5" step="0.01" value="${p.blend.top}"></label>
+<label>B <input type="range" data-pid="${p.id}" data-field="blendB" min="0" max="0.5" step="0.01" value="${p.blend.bottom}"></label>
+</div>
+<div class="actions"><button class="open-btn" data-pid="${p.id}">Ouvrir fenêtre</button></div>`;
+list.appendChild(item);
+}
+list.querySelectorAll('input[data-field]').forEach(inp=>{
+inp.addEventListener('input',e=>{
+const pid=parseInt(e.target.dataset.pid,10),f=e.target.dataset.field;
+const v=parseFloat(e.target.value)||0;
+const proj=state.projectors.find(p=>p.id===pid);
+if(!proj)return;
+if(['x','y','w','h'].includes(f))proj.region[f]=v;
+else if(f==='blendL')proj.blend.left=v;
+else if(f==='blendR')proj.blend.right=v;
+else if(f==='blendT')proj.blend.top=v;
+else if(f==='blendB')proj.blend.bottom=v;
+rebuildProjectorPreviews();broadcast();
+});
+});
+list.querySelectorAll('.open-btn').forEach(btn=>{
+btn.addEventListener('click',e=>openProjectorWindow(parseInt(e.target.dataset.pid,10)));
+});
+list.querySelectorAll('.del').forEach(btn=>{
+btn.addEventListener('click',e=>{
+e.stopPropagation();
+const pid=parseInt(e.target.closest('.projector-item').querySelector('.title').textContent.replace(/\D/g,''),10);
+pushHistory();
+state.projectors=state.projectors.filter(p=>p.id!==pid);
+rebuildProjectorPreviews();renderProjectorList();broadcast();
+});
+});
+}
+function openProjectorWindow(projId){
+const base=location.href.split('#')[0];
+const url=base+'#output&projector='+projId;
+const win=window.open(url,'mapper-output-'+projId,'width=1280,height=720,menubar=no,toolbar=no,location=no');
+if(!win)toast('Popup bloquée — autorisez les popups');
+}
+async function spawnSurfaceWithMedia(dataUrl,type,name){
+pushHistory();
+const s=new Surface({color:'#ffffff',name:name||'Média'});
+state.surfaces.push(s);
+await loadMediaIntoSurface(s,dataUrl,type);
+selectSurface(s.id);renderSurfaceList();broadcast();
+return s;
+}
+function createCircleSurface(){
+pushHistory();
+const N=7;
+const s=new Surface({color:randomColor(),name:'Cercle',gridW:N,gridH:N});
+const r=0.45;const pts=[];
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+const ux=(x/(N-1))*2-1;const vy=(y/(N-1))*2-1;
+const cx=ux*Math.sqrt(1-vy*vy/2);
+const cy=vy*Math.sqrt(1-ux*ux/2);
+pts.push({x:cx*r,y:-cy*r});
+}
+s.points=pts;s.refreshGeometry();
+if(!IS_OUTPUT)s.updateHelpers();
+state.surfaces.push(s);selectSurface(s.id);renderSurfaceList();broadcast();
+}
+async function createTextSurface(){
+const text=prompt('Texte à afficher :','TEXTE');
+if(!text)return;
+const cv=document.createElement('canvas');cv.width=1024;cv.height=256;
+const ctx=cv.getContext('2d');
+ctx.clearRect(0,0,1024,256);
+ctx.fillStyle='#ffffff';ctx.font='bold 180px sans-serif';
+ctx.textAlign='center';ctx.textBaseline='middle';
+ctx.fillText(text,512,128);
+const dataUrl=cv.toDataURL('image/png');
+await spawnSurfaceWithMedia(dataUrl,'image',text);
+addToMediaLibrary(text,dataUrl,'image');
+}
+function addToMediaLibrary(name,url,type){
+if(state.mediaLibrary.some(m=>m.url===url))return;
+state.mediaLibrary.push({name:name||'Média',url,type});
+renderMediaLibrary();
+}
+if(!IS_OUTPUT){
+const $=id=>document.getElementById(id);
+$('prop-color').addEventListener('input',e=>{const s=getSelected();if(!s)return;s.color=e.target.value;renderSurfaceList();});
+$('prop-color').addEventListener('change',()=>{pushHistory();broadcast();});
+$('prop-opacity').addEventListener('input',e=>{const s=getSelected();if(!s)return;s.opacity=e.target.value/100;$('prop-opacity-val').textContent=e.target.value+'%';});
+$('prop-opacity').addEventListener('change',()=>{pushHistory();broadcast();});
+$('prop-grid').addEventListener('change',e=>{
+const s=getSelected();if(!s)return;
+pushHistory();
+const n=parseInt(e.target.value,10);
+s.setGridResolution(n,n);
+broadcast();
+});
+$('prop-mirror-x').addEventListener('change',e=>{const s=getSelected();if(!s)return;pushHistory();s.mirrorX=e.target.checked;broadcast();});
+$('prop-mirror-y').addEventListener('change',e=>{const s=getSelected();if(!s)return;pushHistory();s.mirrorY=e.target.checked;broadcast();});
+$('prop-in').addEventListener('change',e=>{const s=getSelected();if(!s)return;pushHistory();s.inPoint=parseFloat(e.target.value)||0;broadcast();});
+$('prop-out').addEventListener('change',e=>{const s=getSelected();if(!s)return;pushHistory();s.outPoint=parseFloat(e.target.value)||0;broadcast();});
+$('prop-reset').addEventListener('click',()=>{
+const s=getSelected();if(!s)return;
+pushHistory();
+s.points=s.defaultGrid();s.refreshGeometry();s.updateHelpers();
+broadcast();
+});
+$('add-surface').addEventListener('click',()=>{
+pushHistory();
+const s=new Surface({color:randomColor()});
+state.surfaces.push(s);
+selectSurface(s.id);renderSurfaceList();broadcast();
+});
+$('add-circle').addEventListener('click',createCircleSurface);
+$('add-text').addEventListener('click',createTextSurface);
+$('add-media').addEventListener('click',()=>$('file-input').click());
+$('file-input').addEventListener('change',e=>{handleFiles(e.target.files);e.target.value='';});
+$('import-url').addEventListener('click',async()=>{
+const url=prompt('URL de l\'image ou de la vidéo :');
+if(!url)return;
+const isVideo=/\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(url);
+const dataUrl=await urlToDataURL(url);
+if(!dataUrl){toast('Impossible de charger l\'URL');return;}
+await loadFromUrl(dataUrl,isVideo?'video':'image');
+});
+$('blackout').addEventListener('click',toggleBlackout);
+$('aspect-select').addEventListener('change',e=>{
+state.aspect=parseFloat(e.target.value);
+resize();rebuildProjectorPreviews();broadcast();
+});
+$('add-projector').addEventListener('click',()=>{
+pushHistory();
+const id=state.nextProjectorId++;
+const count=state.projectors.length;
+let region;
+if(count===0)region={x:0,y:0,w:1,h:1};
+else{
+const n=count+1,overlap=0.1;
+const unitW=(1+overlap*(n-1))/n;
+region={x:0,y:0,w:unitW,h:1};
+state.projectors.forEach((p,i)=>{p.region.x=i*(unitW-overlap);p.region.w=unitW;});
+}
+state.projectors.push({id,region,blend:{left:0,right:0,top:0,bottom:0}});
+rebuildProjectorPreviews();renderProjectorList();broadcast();
+openProjectorWindow(id);
+});
+$('save-project').addEventListener('click',exportProject);
+$('load-project').addEventListener('click',()=>$('project-input').click());
+$('project-input').addEventListener('change',async e=>{
+if(e.target.files[0])await importProject(e.target.files[0]);
+e.target.value='';
+});
+$('undo-btn').addEventListener('click',undo);
+$('redo-btn').addEventListener('click',redo);
+$('output-btn').addEventListener('click',()=>{
+if(state.projectors.length===0){
+const id=state.nextProjectorId++;
+state.projectors.push({id,region:{x:0,y:0,w:1,h:1},blend:{left:0,right:0,top:0,bottom:0}});
+rebuildProjectorPreviews();renderProjectorList();broadcast();
+}
+openProjectorWindow(state.projectors[0].id);
+});
+document.addEventListener('keydown',e=>{
+if(e.target.matches('input, textarea, select'))return;
+if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!e.shiftKey){e.preventDefault();undo();}
+if((e.ctrlKey||e.metaKey)&&(e.key==='y'||(e.key==='z'&&e.shiftKey))){e.preventDefault();redo();}
+if(e.key==='b'||e.key==='B')toggleBlackout();
+if((e.key==='Delete'||e.key==='Backspace')&&state.selectedId){e.preventDefault();deleteSurface(state.selectedId);}
+});
+}
+async function handleFiles(files){
+for(const file of files){
+if(!file.type.startsWith('image/')&&!file.type.startsWith('video/'))continue;
+const type=file.type.startsWith('video/')?'video':'image';
+const dataUrl=await fileToDataURL(file);
+const name=file.name.replace(/\.[^.]+$/,'');
+await loadFromUrl(dataUrl,type,name);
+}
+}
+async function loadFromUrl(dataUrl,type,name){
+let s=getSelected();
+if(!s){const created=await spawnSurfaceWithMedia(dataUrl,type,name);addToMediaLibrary(name||'Média',dataUrl,type);return created;}
+pushHistory();
+await loadMediaIntoSurface(s,dataUrl,type);
+if(name)s.name=name;
+renderSurfaceList();updatePropertiesPanel();broadcast();
+addToMediaLibrary(name||'Média',dataUrl,type);
+}
+async function exportProject(){
+try{
+const zip=new JSZip();
+const data=serializeState();
+const mediaFolder=zip.folder('media');
+for(let i=0;i<data.surfaces.length;i++){
+const s=data.surfaces[i];
+if(s.mediaUrl&&s.mediaUrl.startsWith('data:')){
+const match=s.mediaUrl.match(/^data:([^;]+);base64,(.+)$/);
+if(!match)continue;
+const mime=match[1];const base64=match[2];
+const ext=mime.includes('video')?'mp4':(mime.includes('png')?'png':(mime.includes('svg')?'svg':'jpg'));
+const filename=`s${i}_${sanitize(s.name)}.${ext}`;
+mediaFolder.file(filename,base64,{base64:true});
+s.mediaUrl='media/'+filename;
+}
+}
+data.mediaLibrary=state.mediaLibrary.map(m=>({name:m.name,type:m.type}));
+zip.file('project.json',JSON.stringify(data,null,2));
+const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download='simple-mapper-'+new Date().toISOString().slice(0,10)+'.zip';a.click();
+setTimeout(()=>URL.revokeObjectURL(url),1000);
+toast('Pack ZIP exporté');
+}catch(e){console.error(e);toast('Erreur lors de l\'export');}
+}
+async function importProject(file){
+try{
+let data;
+if(file.name.endsWith('.zip')||file.type==='application/zip'||file.type==='application/x-zip-compressed'){
+if(typeof JSZip==='undefined')throw new Error('JSZip non chargé');
+const zip=await JSZip.loadAsync(file);
+const projFile=zip.file('project.json');
+if(!projFile)throw new Error('project.json absent du ZIP');
+data=JSON.parse(await projFile.async('string'));
+for(const s of data.surfaces){
+if(s.mediaUrl&&!s.mediaUrl.startsWith('data:')&&zip.file(s.mediaUrl)){
+const blob=await zip.file(s.mediaUrl).async('blob');
+s.mediaUrl=await new Promise(resolve=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(reader.result);
+reader.readAsDataURL(blob);
+});
+}
+}
+}else{
+const text=await file.text();
+data=JSON.parse(text);
+}
+if(!data.mediaLibrary)data.mediaLibrary=[];
+pushHistory();
+await applyState(data);
+broadcast();
+toast('Projet importé');
+}catch(e){console.error(e);toast('Fichier invalide : '+e.message);}
+}
+let saveTimer=null;
+function scheduleAutoSave(){
+clearTimeout(saveTimer);
+saveTimer=setTimeout(()=>{
+try{localStorage.setItem('simple-mapper-state',JSON.stringify(serializeState()));}catch(e){}
+},1500);
+}
+function loadLocalState(){
+try{const s=localStorage.getItem('simple-mapper-state');if(s)return JSON.parse(s);}catch(e){}
+return null;
+}
+function toggleBlackout(){
+state.blackout=!state.blackout;
+const btn=document.getElementById('blackout');
+if(btn){btn.textContent=state.blackout?'⬛ Blackout ON':'⬛ Blackout';btn.classList.toggle('active',state.blackout);}
+renderer.setClearColor(state.blackout?0x000000:0x111111,1);
+broadcast();
+}
+function resize(){
+if(IS_OUTPUT){
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight,false);
+updateOutputCamera();updateBlendUniforms();
+}else editorCamera();
+}
+window.addEventListener('resize',resize);
+if(!IS_OUTPUT)new ResizeObserver(editorCamera).observe(document.getElementById('canvas-wrap'));
+if(IS_OUTPUT){
+document.getElementById('output-label').textContent='Projecteur '+PROJECTOR_ID;
+setTimeout(()=>document.body.classList.add('identified'),2000);
+document.getElementById('output-fullscreen').addEventListener('click',()=>{document.documentElement.requestFullscreen().catch(()=>{});});
+channel.postMessage({type:'hello',projector:PROJECTOR_ID});
+setTimeout(()=>channel.postMessage({type:'hello',projector:PROJECTOR_ID}),300);
+}
+const tutorialSteps=[
+{title:'Bienvenue 👋',text:'Simple Mapper transforme votre projecteur en outil de projection mapping créatif. Créez des surfaces, déformez-les, habillez-les de médias — le tout depuis une seule page web.'},
+{title:'Créer et déformer',text:'Cliquez sur « + Surface », « ◯ Cercle » ou « T Texte » puis glissez les poignées bleues pour épouser une forme réelle. Changez la grille (2×2 à 8×8) pour courber finement. Ctrl+Z / Ctrl+Y pour annuler.'},
+{title:'Projeter',text:'Cliquez sur « ▶ Sortie simple » ou ajoutez plusieurs projecteurs. Glissez les fenêtres sur vos écrans et passez en plein écran. Le blend adoucit les coutures, et l\'export ZIP embarque vos médias.'}
+];
+function showTutorial(){
+if(localStorage.getItem('simple-mapper-tutorial')==='done')return;
+const tut=document.getElementById('tutorial');
+let step=0;
+const render=()=>{
+document.getElementById('tut-title').textContent=tutorialSteps[step].title;
+document.getElementById('tut-text').textContent=tutorialSteps[step].text;
+document.querySelectorAll('#tutorial .step').forEach((el,i)=>el.classList.toggle('active',i===step));
+document.getElementById('tut-next').textContent=step===tutorialSteps.length-1?'Commencer':'Suivant';
+};
+document.getElementById('tut-next').addEventListener('click',()=>{
+if(step===tutorialSteps.length-1){tut.classList.remove('visible');localStorage.setItem('simple-mapper-tutorial','done');}
+else{step++;render();}
+});
+document.getElementById('tut-skip').addEventListener('click',()=>{tut.classList.remove('visible');localStorage.setItem('simple-mapper-tutorial','done');});
+render();
+tut.classList.add('visible');
+}
+function randomColor(){
+const c=['#4a7aff','#ff6a9a','#4aff8a','#ffaa4a','#aa4aff','#4aeaff','#ff4a4a','#ffffff'];
+return c[Math.floor(Math.random()*c.length)];
+}
+function sanitize(str){return (str||'media').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let toastTimer;
+function toast(msg){
+const el=document.getElementById('toast');
+el.textContent=msg;el.classList.add('show');
+clearTimeout(toastTimer);
+toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+resize();
+if(!IS_OUTPUT){
+const local=loadLocalState();
+if(local)applyState(local).then(()=>{if(state.surfaces.length===0)createDemo();});
+else createDemo();
+updateHistoryButtons();
+renderMediaLibrary();
+showTutorial();
+}
+async function createDemo(){
+const demoCanvas=document.createElement('canvas');
+demoCanvas.width=demoCanvas.height=512;
+const ctx=demoCanvas.getContext('2d');
+const grad=ctx.createRadialGradient(256,256,20,256,256,380);
+grad.addColorStop(0,'#5a8aff');grad.addColorStop(0.6,'#4a4aff');grad.addColorStop(1,'#6a1aff');
+ctx.fillStyle=grad;ctx.fillRect(0,0,512,512);
+ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=2;
+for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(256,256,100+i*60,0,Math.PI*2);ctx.stroke();}
+ctx.fillStyle='#fff';ctx.font='bold 52px sans-serif';
+ctx.textAlign='center';ctx.textBaseline='middle';
+ctx.fillText('Simple Mapper',256,256);
+ctx.font='20px sans-serif';ctx.fillStyle='rgba(255,255,255,0.7)';
+ctx.fillText('glissez les coins pour mapper',256,310);
+const dataUrl=demoCanvas.toDataURL('image/png');
+const s=new Surface({name:'Démo',color:'#ffffff'});
+state.surfaces.push(s);
+await loadMediaIntoSurface(s,dataUrl,'image');
+selectSurface(s.id);renderSurfaceList();broadcast();
+}
+function animate(){
+requestAnimationFrame(animate);
+state.surfaces.forEach(s=>s.update());
+if(IS_OUTPUT){
+renderer.autoClear=false;renderer.clear();
+renderer.render(scene,camera);
+renderer.render(blendScene,blendCamera);
+renderer.autoClear=true;
+}else{
+renderer.autoClear=false;renderer.clear();
+renderer.render(scene,camera);
+renderer.clearDepth();
+renderer.render(editorScene,camera);
+renderer.autoClear=true;
+}
+}
+animate();
+</script>
+</body>
+</html>

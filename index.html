@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple Mapper — La projection mapping sans complexité</title>
+<meta name="description" content="Transformez n'importe quel projecteur en outil de projection mapping créatif. Depuis votre navigateur, sans installation. Gratuit et open-source.">
+<meta property="og:title" content="Simple Mapper — La projection mapping sans complexité">
+<meta property="og:description" content="Un projecteur, une idée, cinq minutes. Créez des projections mapping impressionnantes depuis votre navigateur.">
+<meta property="og:image" content="./assets/og-image.png">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+<style>
+  :root {
+    --bg: #0e0e10;
+    --bg-2: #17171a;
+    --bg-3: #1e1e22;
+    --border: #2a2a30;
+    --text: #e8e8ec;
+    --text-dim: #9a9aa2;
+    --accent: #4a7aff;
+    --accent-2: #6a8aff;
+    --accent-dim: #2e3d5e;
+    --success: #4aff8a;
+    --warn: #ffaa4a;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --max-w: 1100px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; transition: color 0.15s; }
+  a:hover { color: var(--accent-2); }
+  img { max-width: 100%; display: block; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(14,14,16,0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .container {
+    max-width: var(--max-w); margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  nav .brand { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  nav .brand .logo { font-size: 20px; }
+  nav .links { display: flex; gap: 24px; margin-left: auto; }
+  nav .links a { color: var(--text-dim); font-size: 14px; }
+  nav .links a:hover { color: var(--text); }
+  nav .cta-nav {
+    padding: 8px 16px; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+  }
+  nav .cta-nav:hover { background: var(--accent-2); color: #fff; }
+  @media (max-width: 720px) {
+    nav .links { display: none; }
+  }
+
+  /* HERO */
+  .hero {
+    max-width: var(--max-w); margin: 0 auto; padding: 80px 24px 100px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(74,122,255,0.15), transparent 60%);
+    pointer-events: none;
+  }
+  .hero > * { position: relative; }
+  .hero .badge {
+    display: inline-block; padding: 6px 14px; margin-bottom: 24px;
+    background: var(--accent-dim); color: var(--accent-2);
+    border-radius: 999px; font-size: 12px; font-weight: 600;
+    border: 1px solid rgba(74,122,255,0.3);
+  }
+  .hero h1 {
+    font-size: clamp(36px, 6vw, 64px); font-weight: 800; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 24px;
+  }
+  .hero h1 .accent {
+    background: linear-gradient(135deg, #4a7aff, #8a6aff);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero .subtitle {
+    font-size: clamp(16px, 2.5vw, 20px); color: var(--text-dim);
+    max-width: 640px; margin: 0 auto 40px;
+  }
+  .hero .cta-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px; border-radius: var(--radius-sm);
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-2); color: #fff; transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+  .hero .meta {
+    font-size: 13px; color: var(--text-dim);
+    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+  }
+  .hero .meta span { display: inline-flex; align-items: center; gap: 6px; }
+  .hero .meta .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  /* VIDEO / DEMO */
+  .demo {
+    max-width: 960px; margin: 0 auto; padding: 0 24px 100px;
+  }
+  .demo-frame {
+    aspect-ratio: 16 / 9; background: var(--bg-2);
+    border-radius: var(--radius); border: 1px solid var(--border);
+    overflow: hidden; position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .demo-frame video,
+  .demo-frame img,
+  .demo-frame .placeholder {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .demo-frame .placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1a1a24, #2a2a3a);
+    color: var(--text-dim);
+  }
+  .demo-frame .placeholder .icon {
+    font-size: 64px; margin-bottom: 16px; opacity: 0.5;
+  }
+  .demo-frame .placeholder .text {
+    font-size: 16px; font-weight: 600;
+  }
+  .demo-frame .placeholder .sub {
+    font-size: 13px; margin-top: 4px; opacity: 0.7;
+  }
+  .demo-caption {
+    text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 16px;
+  }
+
+  /* SECTION */
+  section { max-width: var(--max-w); margin: 0 auto; padding: 80px 24px; }
+  section h2 {
+    font-size: clamp(28px, 4vw, 40px); font-weight: 800;
+    letter-spacing: -0.02em; margin-bottom: 12px; text-align: center;
+  }
+  section .lead {
+    text-align: center; color: var(--text-dim); font-size: 17px;
+    max-width: 600px; margin: 0 auto 56px;
+  }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .feature {
+    padding: 24px; background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .feature:hover { border-color: var(--accent-dim); transform: translateY(-2px); }
+  .feature .icon { font-size: 28px; margin-bottom: 16px; }
+  .feature h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .feature p { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+
+  /* USE CASES */
+  .use-cases {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .use-case {
+    padding: 20px; background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .use-case .emoji { font-size: 24px; flex-shrink: 0; }
+  .use-case .label { font-size: 14px; font-weight: 600; }
+
+  /* HOW IT WORKS */
+  .steps {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px; counter-reset: step;
+  }
+  .step {
+    padding: 32px 24px; background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    position: relative; counter-increment: step;
+  }
+  .step::before {
+    content: counter(step);
+    position: absolute; top: -16px; left: 24px;
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; border-radius: 50%;
+    font-weight: 700; font-size: 14px;
+  }
+  .step h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .step p { color: var(--text-dim); font-size: 14px; }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px; max-width: 800px; margin: 0 auto;
+  }
+  .plan {
+    padding: 32px 28px; background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    position: relative;
+  }
+  .plan.featured {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-dim), 0 20px 60px rgba(74,122,255,0.15);
+  }
+  .plan .badge {
+    position: absolute; top: -12px; right: 20px;
+    padding: 4px 12px; background: var(--accent); color: #fff;
+    border-radius: 999px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .plan h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .plan .price {
+    font-size: 36px; font-weight: 800; margin: 20px 0 4px;
+    letter-spacing: -0.02em;
+  }
+  .plan .price .suffix { font-size: 14px; font-weight: 400; color: var(--text-dim); }
+  .plan .desc { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; }
+  .plan ul {
+    list-style: none; padding: 0; margin-bottom: 28px;
+  }
+  .plan ul li {
+    padding: 8px 0; font-size: 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .plan ul li::before {
+    content: "✓"; color: var(--success); font-weight: 700;
+    flex-shrink: 0;
+  }
+  .plan ul li.muted { color: var(--text-dim); }
+  .plan ul li.muted::before { content: "·"; color: var(--text-dim); }
+  .plan .btn { width: 100%; justify-content: center; }
+
+  /* FAQ */
+  .faq { max-width: 760px; margin: 0 auto; }
+  .faq details {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 20px 24px; margin-bottom: 12px;
+  }
+  .faq summary {
+    cursor: pointer; font-weight: 600; font-size: 15px;
+    list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after {
+    content: "+"; font-size: 20px; color: var(--text-dim);
+    transition: transform 0.15s;
+  }
+  .faq details[open] summary::after { transform: rotate(45deg); }
+  .faq details p { margin-top: 12px; color: var(--text-dim); font-size: 14px; }
+
+  /* FINAL CTA */
+  .final-cta {
+    max-width: var(--max-w); margin: 0 auto; padding: 80px 24px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(74,122,255,0.08), rgba(138,106,255,0.08));
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .final-cta h2 { margin-bottom: 16px; }
+  .final-cta p { color: var(--text-dim); font-size: 17px; margin-bottom: 32px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border); padding: 40px 24px;
+    text-align: center; font-size: 13px; color: var(--text-dim);
+  }
+  footer .links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  footer .links a { color: var(--text-dim); }
+  footer .links a:hover { color: var(--text); }
+  footer .made { margin-top: 8px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a href="#" class="brand">
+      <span class="logo">🎯</span>
+      <span>Simple Mapper</span>
+    </a>
+    <div class="links">
+      <a href="#features">Fonctionnalités</a>
+      <a href="#how">Comment ça marche</a>
+      <a href="#pricing">Tarifs</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="app.html" class="cta-nav">Lancer l'app →</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="badge">✨ Nouveau — v1.0 disponible</div>
+  <h1>
+    La projection mapping<br>
+    <span class="accent">sans complexité</span>
+  </h1>
+  <p class="subtitle">
+    Transformez n'importe quel projecteur en outil de projection mapping créatif.
+    Depuis votre navigateur, sans installation. Un projecteur, une idée, cinq minutes.
+  </p>
+  <div class="cta-row">
+    <a href="app.html" class="btn btn-primary">▶ Lancer l'application</a>
+    <a href="#how" class="btn btn-secondary">Voir la démo</a>
+  </div>
+  <div class="meta">
+    <span><span class="dot"></span> Sans inscription</span>
+    <span><span class="dot"></span> 100 % local</span>
+    <span><span class="dot"></span> Open-source (MIT)</span>
+    <span><span class="dot"></span> Multi-plateforme</span>
+  </div>
+</header>
+
+<!-- DEMO VIDEO -->
+<div class="demo">
+  <div class="demo-frame">
+    <!-- Remplacer par une vraie vidéo/MP4 en production -->
+    <video
+      autoplay muted loop playsinline poster="./assets/demo-poster.jpg"
+      style="background:#1a1a24;">
+      <source src="./assets/demo.mp4" type="video/mp4">
+      <div class="placeholder">
+        <div class="icon">🎬</div>
+        <div class="text">Démo vidéo (30 s)</div>
+        <div class="sub">Placez votre démo dans assets/demo.mp4</div>
+      </div>
+    </video>
+  </div>
+  <p class="demo-caption">
+    Créez une surface, déformez-la, appliquez un média, projetez — le tout en moins de 5 minutes.
+  </p>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <h2>Tout ce qu'il faut. Rien de plus.</h2>
+  <p class="lead">
+    Conçu pour la simplicité, taillé pour le rendu. Chaque fonctionnalité a été pensée pour un objectif : votre résultat sur le mur.
+  </p>
+  <div class="features-grid">
+    <div class="feature">
+      <div class="icon">🔲</div>
+      <h3>Warping mesh intuitif</h3>
+      <p>Grille de 2×2 à 8×8 points. Glissez les coins du bout des doigts pour épouser une façade, une boîte, une forme courbe.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🎥</div>
+      <h3>Images & vidéos</h3>
+      <p>Importez vos propres médias par drag-drop ou URL. Boucle, in/out, opacité, miroir X/Y — tout est réglable en direct.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🖥️</div>
+      <h3>Multi-projecteurs</h3>
+      <p>Jusqu'à 4 projecteurs avec edge blending automatique. Les coutures disparaissent, l'image devient une.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">⚡</div>
+      <h3>Synchronisation instantanée</h3>
+      <p>Modifiez un point dans l'éditeur, il apparaît sur toutes les sorties en moins de 100 ms. Aucun câble, aucun serveur.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">💾</div>
+      <h3>Sauvegarde complète</h3>
+      <p>Export ZIP avec tous vos médias. Un projet, un fichier, portable. Restauration à l'identique en un clic.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📴</div>
+      <h3>Fonctionne hors ligne</h3>
+      <p>Aucun serveur, aucune connexion requise. Vos médias ne quittent jamais votre appareil.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <h2>Trois étapes. Cinq minutes.</h2>
+  <p class="lead">Pas de manuel, pas de tutoriel vidéo de 45 minutes. Juste un flux de travail limpide.</p>
+  <div class="steps">
+    <div class="step">
+      <h3>Créez une surface</h3>
+      <p>Cliquez sur « + Surface », ou glissez directement une image sur le canevas. Une surface apparaît, prête à être ajustée.</p>
+    </div>
+    <div class="step">
+      <h3>Déformez-la</h3>
+      <p>Glissez les poignées bleues pour épouser la forme réelle. Augmentez la résolution de la grille pour les surfaces courbes.</p>
+    </div>
+    <div class="step">
+      <h3>Projetez</h3>
+      <p>Cliquez sur « ▶ Sortie », glissez la fenêtre sur votre projecteur, passez en plein écran. C'est tout.</p>
+    </div>
+  </div>
+</section>
+
+<!-- USE CASES -->
+<section>
+  <h2>Pensé pour tous les créatifs</h2>
+  <p class="lead">Du salon familial à la vitrine de boutique, en passant par la scène du coin.</p>
+  <div class="use-cases">
+    <div class="use-case"><span class="emoji">🎃</span><span class="label">Décors Halloween</span></div>
+    <div class="use-case"><span class="emoji">🎄</span><span class="label">Illuminations de Noël</span></div>
+    <div class="use-case"><span class="emoji">💍</span><span class="label">Mariages & anniversaires</span></div>
+    <div class="use-case"><span class="emoji">🏪</span><span class="label">Vitrines de magasin</span></div>
+    <div class="use-case"><span class="emoji">🎸</span><span class="label">Concerts amateurs</span></div>
+    <div class="use-case"><span class="emoji">🎨</span><span class="label">Expositions d'art</span></div>
+    <div class="use-case"><span class="emoji">🎓</span><span class="label">Enseignement</span></div>
+    <div class="use-case"><span class="emoji">🎭</span><span class="label">Théâtre & scène</span></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <h2>Simple et honnête</h2>
+  <p class="lead">Pas d'abonnement, pas de surprise. Payez une fois, utilisez pour toujours.</p>
+  <div class="pricing-grid">
+    <div class="plan">
+      <h3>Gratuit</h3>
+      <div class="price">0 €</div>
+      <p class="desc">Pour découvrir et créer vos premiers mappings.</p>
+      <ul>
+        <li>Toutes les fonctionnalités de base</li>
+        <li>1 projecteur actif</li>
+        <li>Grilles de 2×2 à 8×8</li>
+        <li>Import illimité de médias</li>
+        <li>Export ZIP complet</li>
+        <li class="muted">Filigrane discret en sortie</li>
+      </ul>
+      <a href="app.html" class="btn btn-secondary">Commencer gratuitement</a>
+    </div>
+    <div class="plan featured">
+      <div class="badge">Populaire</div>
+      <h3>Pro</h3>
+      <div class="price">39 € <span class="suffix">une fois</span></div>
+      <p class="desc">Pour les créatifs exigeants et les pros légers.</p>
+      <ul>
+        <li>Tout ce qui est dans Gratuit</li>
+        <li>Jusqu'à 4 projecteurs</li>
+        <li>Edge blending avancé</li>
+        <li>Sans filigrane</li>
+        <li>Support prioritaire</li>
+        <li>Mises à jour v1.x incluses</li>
+      </ul>
+      <a href="#pricing" class="btn btn-primary">Acheter Pro</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <h2>Questions fréquentes</h2>
+  <p class="lead">Tout ce que vous pourriez vous demander avant de commencer.</p>
+  <div class="faq">
+    <details>
+      <summary>Faut-il installer un logiciel ?</summary>
+      <p>Non. Simple Mapper fonctionne entièrement dans votre navigateur (Chrome, Edge, Firefox, Safari). Un seul fichier HTML, aucune installation, aucune inscription.</p>
+    </details>
+    <details>
+      <summary>Quels types de projecteurs sont compatibles ?</summary>
+      <p>N'importe quel projecteur ou écran connecté à votre ordinateur. Le projecteur doit simplement être reconnu comme un second écran par votre système — c'est le cas de 99 % des projecteurs modernes (HDMI, USB-C, sans fil).</p>
+    </details>
+    <details>
+      <summary>Puis-je utiliser plusieurs projecteurs en même temps ?</summary>
+      <p>Oui, jusqu'à 4 projecteurs avec la version Pro. Chaque projecteur affiche une région de la scène, et l'edge blending permet de fusionner les bords pour une image continue.</p>
+    </details>
+    <details>
+      <summary>Mes médias sont-ils envoyés sur un serveur ?</summary>
+      <p>Non. Tout reste sur votre ordinateur. Aucune donnée n'est transmise, aucune connexion n'est requise après le premier chargement (mode offline disponible).</p>
+    </details>
+    <details>
+      <summary>Ça marche sur tablette ?</summary>
+      <p>Oui, sur iPad (Safari 16.4+) et tablettes Android (Chrome 110+). L'interface est adaptée au tactile avec des poignées et boutons agrandis.</p>
+    </details>
+    <details>
+      <summary>Que se passe-t-il si je perds mon ordinateur ?</summary>
+      <p>Vos projets sont sauvegardés automatiquement dans votre navigateur et peuvent être exportés en fichier ZIP. Il suffit de réimporter ce fichier sur un autre appareil pour tout retrouver.</p>
+    </details>
+    <details>
+      <summary>La version gratuite est-elle limitée dans le temps ?</summary>
+      <p>Non. Elle est gratuite à vie. Seules les fonctionnalités multi-projecteurs et la suppression du filigrane nécessitent la version Pro.</p>
+    </details>
+    <details>
+      <summary>Puis-je contribuer au projet ?</summary>
+      <p>Oui ! Le code est open-source sous licence MIT. Toutes les contributions sont bienvenues : bugs, suggestions, code, traductions. Voir le README sur GitHub.</p>
+    </details>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <h2>Prêt à projeter ?</h2>
+  <p>Aucune inscription. Aucune installation. Juste votre projecteur et votre imagination.</p>
+  <a href="app.html" class="btn btn-primary">▶ Lancer l'application</a>
+</div>
+
+<footer>
+  <div class="links">
+    <a href="./docs/guide.md">Guide utilisateur</a>
+    <a href="./README.md">README</a>
+    <a href="https://github.com/votre-org/simple-mapper">GitHub</a>
+    <a href="./legal/privacy.html">Confidentialité</a>
+    <a href="./legal/terms.html">Mentions légales</a>
+  </div>
+  <p>Simple Mapper — Fait avec ❤️ par la communauté. Sous licence MIT.</p>
+  <p class="made">Vos médias ne quittent jamais votre appareil.</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+simple-mapper/
+├── package.json
+├── .gitignore
+├── README.md
+├── LICENSE
+├── index.html
+├── app.html
+├── netlify.toml                       # ✨ Nouveau
+├── .github/
+│   └── workflows/
+│       ├── deploy.yml                 # ✨ Nouveau (GitHub Pages + Releases)
+│       └── netlify.yml                # ✨ Nouveau (optionnel, Netlify CI)
+├── scripts/
+│   ├── build.js                       # ✨ Mis à jour (mode watch)
+│   ├── deploy.js                      # ✨ Nouveau
+│   └── vendor.js
+├── assets/
+│   └── README.md
+├── vendor/
+│   ├── README.md
+│   ├── three.module.js                # Cache local (gitignored)
+│   └── jszip.min.js                   # Cache local (gitignored)
+├── docs/
+│   └── guide.md
+├── legal/
+│   ├── privacy.html
+│   └── terms.html
+└── demos/
+    ├── README.md
+    ├── index.html
+    ├── halloween.json
+    ├── facade.json
+    ├── mariage.json
+    ├── noel.json
+    ├── concert.json
+    └── vitrine.json

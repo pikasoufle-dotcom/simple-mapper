@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "exportedAt": "2026-10-29T00:00:00.000Z",
+  "surfaces": [
+    {
+      "id": 1,
+      "name": "Façade courbe",
+      "gridW": 5,
+      "gridH": 5,
+      "points": [
+        {"x": -0.5,  "y":  0.5},
+        {"x": -0.25, "y":  0.53},
+        {"x": 0,     "y":  0.55},
+        {"x": 0.25,  "y":  0.53},
+        {"x": 0.5,   "y":  0.5},
+        {"x": -0.52, "y":  0.25},
+        {"x": -0.26, "y":  0.28},
+        {"x": 0,     "y":  0.30},
+        {"x": 0.26,  "y":  0.28},
+        {"x": 0.52,  "y":  0.25},
+        {"x": -0.54, "y":  0},
+        {"x": -0.27, "y":  0.03},
+        {"x": 0,     "y":  0.05},
+        {"x": 0.27,  "y":  0.03},
+        {"x": 0.54,  "y":  0},
+        {"x": -0.52, "y": -0.25},
+        {"x": -0.26, "y": -0.22},
+        {"x": 0,     "y": -0.20},
+        {"x": 0.26,  "y": -0.22},
+        {"x": 0.52,  "y": -0.25},
+        {"x": -0.5,  "y": -0.5},
+        {"x": -0.25, "y": -0.47},
+        {"x": 0,     "y": -0.45},
+        {"x": 0.25,  "y": -0.47},
+        {"x": 0.5,   "y": -0.5}
+      ],
+      "color": "#ffffff",
+      "opacity": 1,
+      "mirrorX": false,
+      "mirrorY": false,
+      "inPoint": 0,
+      "outPoint": 0,
+      "mediaUrl": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a1a2e'/%3E%3Cstop offset='100%25' stop-color='%23162d3d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' fill='url(%23bg)'/%3E%3Cg fill='none' stroke='%2300d4ff' stroke-width='3' opacity='0.8'%3E%3Ccircle cx='256' cy='256' r='210'/%3E%3Ccircle cx='256' cy='256' r='170'/%3E%3Ccircle cx='256' cy='256' r='130'/%3E%3Ccircle cx='256' cy='256' r='90'/%3E%3Ccircle cx='256' cy='256' r='50'/%3E%3Cline x1='46' y1='256' x2='466' y2='256'/%3E%3Cline x1='256' y1='46' x2='256' y2='466'/%3E%3Cline x1='107' y1='107' x2='405' y2='405'/%3E%3Cline x1='405' y1='107' x2='107' y2='405'/%3E%3C/g%3E%3Cg fill='%2300d4ff'%3E%3Ccircle cx='256' cy='46' r='10'/%3E%3Ccircle cx='256' cy='466' r='10'/%3E%3Ccircle cx='46' cy='256' r='10'/%3E%3Ccircle cx='466' cy='256' r='10'/%3E%3C/g%3E%3Ctext x='256' y='500' text-anchor='middle' font-size='20' fill='%2300d4ff' font-family='sans-serif' letter-spacing='8'%3EFACADE%3C/text%3E%3C/svg%3E",
+      "mediaType": "image"
+    }
+  ],
+  "projectors": [
+    {
+      "id": 1,
+      "region": {"x": 0, "y": 0, "w": 1, "h": 1},
+      "blend": {"left": 0, "right": 0, "top": 0, "bottom": 0}
+    }
+  ],
+  "mediaLibrary": [
+    {
+      "name": "Motif géométrique",
+      "url": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%231a1a2e'/%3E%3Cstop offset='100%25' stop-color='%23162d3d'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' fill='url(%23bg)'/%3E%3Cg fill='none' stroke='%2300d4ff' stroke-width='3' opacity='0.8'%3E%3Ccircle cx='256' cy='256' r='210'/%3E%3Ccircle cx='256' cy='256' r='170'/%3E%3Ccircle cx='256' cy='256' r='130'/%3E%3Ccircle cx='256' cy='256' r='90'/%3E%3Ccircle cx='256' cy='256' r='50'/%3E%3Cline x1='46' y1='256' x2='466' y2='256'/%3E%3Cline x1='256' y1='46' x2='256' y2='466'/%3E%3Cline x1='107' y1='107' x2='405' y2='405'/%3E%3Cline x1='405' y1='107' x2='107' y2='405'/%3E%3C/g%3E%3Cg fill='%2300d4ff'%3E%3Ccircle cx='256' cy='46' r='10'/%3E%3Ccircle cx='256' cy='466' r='10'/%3E%3Ccircle cx='46' cy='256' r='10'/%3E%3Ccircle cx='466' cy='256' r='10'/%3E%3C/g%3E%3Ctext x='256' y='500' text-anchor='middle' font-size='20' fill='%2300d4ff' font-family='sans-serif' letter-spacing='8'%3EFACADE%3C/text%3E%3C/svg%3E",
+      "type": "image"
+    }
+  ],
+  "blackout": false,
+  "aspect": 1.7778,
+  "nextId": 2,
+  "nextProjectorId": 2
+}

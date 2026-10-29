@@ -1,0 +1,545 @@
+📘 Cahier des Charges Fonctionnel — Simple Mapper
+Version : 1.0
+Date : Octobre 2026
+Statut : Spécification de référence pour le développement v1.0 → v2.0
+Auteur : Équipe produit Simple Mapper
+Destinataires : Développement, Design, QA, Marketing
+
+1. Contexte et vision
+1.1 Contexte
+Le projection mapping est une technologie créative en forte croissance (événementiel, retail, spectacles, décoration saisonnière). Le marché est aujourd'hui polarisé :
+
+Desktop professionnel : MadMapper, Resolume, HeavyM Pro — puissants, chers, complexes (courbe d'apprentissage de plusieurs jours).
+
+Mobile accessible : Lazy Lighting, SurfaBeam, Optoma Projection Mapper — simples mais bridés (mono-projecteur, contenu limité).
+
+Simple Mapper se positionne à l'intersection : la simplicité du mobile, avec la précision du desktop, sur navigateur, sans installation.
+
+1.2 Vision produit
+« La projection mapping sans complexité. Un projecteur, une idée, cinq minutes. »
+
+Simple Mapper doit être l'outil de référence pour les utilisateurs qui veulent un résultat professionnel sans devenir experts : particuliers, artistes amateurs, VJs débutants, enseignants, petits commerces, organisateurs de petits événements.
+
+1.3 Objectifs mesurables (v1.0, 6 mois post-lancement)
+Objectif	Indicateur	Cible
+Adoption	Utilisateurs actifs mensuels	5 000
+Rétention	Retour à J+7	25 %
+Satisfaction	NPS	≥ 40
+Simplicité	Time-to-first-projection	< 5 min
+Technique	Stabilité (crash-free)	> 99 %
+Économie	Taux de conversion gratuit → Pro	3–5 %
+1.4 Non-objectifs (v1.0)
+Ce que Simple Mapper ne fera pas, pour préserver son ADN :
+
+❌ Gestion MIDI / OSC / DMX / Art-Net
+
+❌ Timeline à keyframes complexes
+
+❌ Scripting / nœuds visuels
+
+❌ Projection sur dôme / 360° / surfaces non planes au-delà du mesh
+
+❌ Edge blending ultra-paramétrable (courbe en S à 10 points)
+
+❌ Support vidéo au-delà de 4K par projecteur en v1.0
+
+Ces fonctionnalités seront réévaluées en v2.0+ uniquement si la demande utilisateur est forte et mesurée.
+
+2. Public cible et personas
+2.1 Persona 1 — « Le particulier créatif » (60 % de la base)
+Profil : 25–55 ans, décorateur amateur, fan de Halloween/Noël, bricoleur numérique.
+
+Contexte : 1 projecteur grand public (500–1500 lumens), PC portable, salon ou jardin.
+
+Besoins : un visuel qui claque en 10 minutes, pas de lecture de manuel.
+
+Frustrations actuelles : Lazy Lighting nécessite un smartphone ; MadMapper est trop cher et complexe.
+
+Critère de succès : « J'ai réussi sans regarder de tutoriel. »
+
+2.2 Persona 2 — « L'artiste / VJ amateur » (25 %)
+Profil : 20–40 ans, étudiant en art, graphiste freelance, DJ amateur.
+
+Contexte : 1–2 projecteurs, veut synchroniser avec de la musique, cherche à expérimenter.
+
+Besoins : effets réactifs à l'audio, import de médias personnels, multi-projecteurs simple.
+
+Frustrations : SurfaBeam est trop rigide, HeavyM est trop « pro ».
+
+Critère de succès : « Je peux improviser en live devant 50 personnes. »
+
+2.3 Persona 3 — « Le pro léger » (15 %)
+Profil : 30–50 ans, organisateur d'événements, agence événementielle, retail.
+
+Contexte : 2–4 projecteurs, événementiel one-shot (mariage, inauguration, vitrine).
+
+Besoins : un rendu propre (edge blending), fiabilité, export/backup, budget limité.
+
+Frustrations : les solutions pro imposent une licence à 500 €+ pour un seul événement.
+
+Critère de succès : « Le rendu est propre, mes clients sont impressionnés. »
+
+3. Périmètre fonctionnel (MoSCoW)
+3.1 Priorités
+M (Must have) : indispensable v1.0
+
+S (Should have) : important, cible v1.5
+
+C (Could have) : nice-to-have, cible v2.0
+
+W (Won't have) : hors périmètre (voir 1.4)
+
+3.2 Vue d'ensemble
+Domaine	Fonctionnalité	Priorité	Cible
+Surfaces	Création rectangle/quadrilatère	M	v1.0
+Warp mesh 2×2 → 8×8	M	v1.0
+Cercles, texte	M	v1.0
+Polygone libre	S	v1.5
+Groupes de surfaces	C	v2.0
+Médias	Import image + vidéo (local)	M	v1.0
+Import URL	M	v1.0
+Bibliothèque réutilisable	M	v1.0
+Contrôles vidéo (in/out, pause)	M	v1.0
+Contenu génératif intégré (5 visuels)	S	v1.5
+Effets shader (miroir, kaléidoscope, teinte)	S	v1.5
+Masques polygonaux	C	v2.0
+Multi-projecteurs	Jusqu'à 4 projecteurs	M	v1.0
+Edge blending fonctionnel (smoothstep)	M	v1.0
+Preview des régions dans l'éditeur	M	v1.0
+Test pattern	S	v1.5
+Correction colorimétrique par projecteur	C	v2.0
+Interaction	Undo/redo	M	v1.0
+Zoom/pan dans l'éditeur	S	v1.5
+Snap/aimantation	S	v1.5
+Raccourcis clavier	M	v1.0
+Support tactile / tablette	M	v1.0
+Sauvegarde	Export ZIP avec médias	M	v1.0
+Import ZIP	M	v1.0
+Autosave local (localStorage)	M	v1.0
+Historique de versions	C	v2.0
+Distribution	Application 100 % offline	S	v1.5
+PWA installable	S	v1.5
+Landing page + démo	M	v1.0
+Compte utilisateur / cloud	W (v2.0+)	—
+Monétisation	Mode gratuit avec filigrane	M	v1.0
+Licence Pro (achat unique)	M	v1.0
+4. Description détaillée des fonctionnalités (v1.0 Must have)
+4.1 Gestion des surfaces
+4.1.1 Création de surface
+Description : L'utilisateur peut créer une surface de projection par 3 méthodes :
+
+Bouton « + Surface » → rectangle 3×3 centré.
+
+Glisser-déposer d'un fichier média → crée une surface 3×3 avec le média préchargé.
+
+Bouton « ◯ Cercle » → surface circulaire (grille 7×7 mappée sur disque).
+
+Bouton « T Texte » → génère un canvas texte et crée la surface.
+
+Critères d'acceptation :
+
+3 clics maximum pour créer une surface.
+
+La surface créée est immédiatement sélectionnée et ses poignées visibles.
+
+L'action est annulable (Ctrl+Z).
+
+4.1.2 Warping mesh
+Description : Chaque surface est un maillage déformable. L'utilisateur peut choisir la résolution (2×2 à 8×8) dans le panneau propriétés. Les points sont déplaçables individuellement. Un glisser sur la surface entière la déplace.
+
+Critères d'acceptation :
+
+Drag d'un point → déplacement en temps réel, sans lag perceptible (> 55 fps).
+
+Changement de résolution → interpolation bilinéaire des points existants.
+
+Reset → retour à la grille par défaut.
+
+Sur tablette, les poignées tactiles sont ≥ 44 px de diamètre visuel.
+
+4.1.3 Propriétés de surface
+Panneau flottant en bas à gauche, visible dès qu'une surface est sélectionnée. Contient :
+
+Couleur de teinte (color picker, appliquée en multiplication au média).
+
+Opacité (0–100 %).
+
+Résolution de grille.
+
+Miroir X / Y (cases à cocher).
+
+Contrôles vidéo in/out (si vidéo).
+
+Bouton « Réinitialiser ».
+
+4.2 Gestion des médias
+4.2.1 Import
+Sources acceptées : fichiers locaux (drag-drop ou file picker), URL directe (image/vidéo).
+
+Formats supportés : images (PNG, JPG, GIF, WEBP, SVG), vidéos (MP4 H.264, WEBM VP9, MOV si codec navigateur).
+
+Taille maximale recommandée : 100 Mo par fichier. Un avertissement s'affiche au-delà.
+
+Conversion : tous les médias locaux sont convertis en dataURL pour permettre la synchronisation entre fenêtres.
+
+Critères d'acceptation :
+
+Un drag-drop d'image crée une surface ou remplit la surface sélectionnée.
+
+Un fichier invalide affiche un toast d'erreur explicite.
+
+La vidéo démarre automatiquement (muet par défaut, autoplay).
+
+4.2.2 Bibliothèque de médias
+Description : Panneau sidebar listant tous les médias importés dans le projet. Clic sur un média → l'applique à la surface sélectionnée (ou crée une surface).
+
+Suppression : icône × sur chaque item, avec confirmation.
+
+Persistance : la bibliothèque est sauvegardée dans le projet (ZIP) et dans localStorage.
+
+4.2.3 Contrôles vidéo
+Champ In (secondes) et Out (secondes).
+
+Si In > 0 : la lecture démarre à In.
+
+Si Out > 0 : la lecture boucle entre In et Out.
+
+La vidéo reste muette par défaut (option son en v1.5).
+
+4.3 Projection simple et multi-projecteurs
+4.3.1 Sortie simple
+Bouton « ▶ Sortie simple » dans la toolbar.
+
+Crée automatiquement un projecteur plein écran si aucun n'existe.
+
+Ouvre une popup en #output&projector=N.
+
+La popup est noire, plein écran sur l'écran secondaire (détection via window.screen).
+
+4.3.2 Multi-projecteurs
+Jusqu'à 4 projecteurs en v1.0 (illimité en v1.5 si stabilité validée).
+
+Chaque projecteur a une région (x, y, w, h) dans un système de coordonnées normalisées [0–1].
+
+Chaque projecteur a un blend (left, right, top, bottom) de 0 à 0.5.
+
+Preview colorée de chaque région dans l'éditeur (une couleur par projecteur).
+
+4.3.3 Edge blending
+Implémenté par shader GLSL : smoothstep sur chaque bord.
+
+La valeur blend correspond à la fraction de largeur/hauteur atténuée.
+
+Le rendu final doit être imperceptible à 1 m de distance pour un chevauchement de 10 %.
+
+4.3.4 Synchronisation
+Canal BroadcastChannel('simple-mapper-sync').
+
+Handshake hello → state à l'ouverture d'une fenêtre de sortie.
+
+Toute modification dans l'éditeur est diffusée aux fenêtres de sortie en < 100 ms.
+
+Critères d'acceptation :
+
+Modifier un point dans l'éditeur se reflète sur toutes les sorties en < 100 ms.
+
+Fermer puis rouvrir une fenêtre de sortie retrouve l'état courant.
+
+Un décalage de moins de 16 ms entre les rendus de deux projecteurs (test : afficher une image bicolore, mesurer au ralenti).
+
+4.4 Interface et ergonomie
+4.4.1 Principes UX
+Zéro menu caché : tout est accessible en un clic ou un raccourci.
+
+Onboarding sans manuel : tutoriel 3 étapes au premier lancement.
+
+Raccourcis clavier : Ctrl+Z/Ctrl+Y, B (blackout), Suppr.
+
+Feedback immédiat : toasts pour chaque action importante.
+
+4.4.2 Layout
+Toolbar : titre, création, undo/redo, sauvegarde, format, blackout, sortie.
+
+Sidebar (280 px) : surfaces, bibliothèque, projecteurs.
+
+Canvas : zone centrale, délimitée par la zone de mapping (letterbox selon format).
+
+Properties : flottant en bas à gauche quand une surface est sélectionnée.
+
+4.4.3 Support tablette
+Cible : iPad (Safari ≥ 16), Android (Chrome ≥ 100).
+
+Poignées tactiles agrandies (> 44 px).
+
+Boutons toolbar et properties : min 40 px de hauteur.
+
+touch-action: none sur le canvas pour éviter le scroll.
+
+Test de manipulation multi-doigts (drag simultané de deux points) : non prioritaire v1.0.
+
+4.5 Sauvegarde et reprise
+4.5.1 Autosave local
+Sauvegarde automatique dans localStorage (clé simple-mapper-state) toutes les 1,5 s après modification.
+
+Restauration au prochain chargement si une session existe.
+
+Pas de prompt utilisateur (transparent).
+
+4.5.2 Export ZIP
+Génère un fichier .zip contenant :
+
+project.json : état complet sérialisé.
+
+media/ : médias référencés, nommés <surface>_<nom>.<ext>.
+
+Le project.json référence les médias par chemin relatif.
+
+4.5.3 Import ZIP
+Extraction de project.json + médias.
+
+Restitution complète de l'état (surfaces, projecteurs, bibliothèque).
+
+Toast de confirmation ou d'erreur explicite.
+
+4.6 Monétisation
+4.6.1 Version gratuite
+Accès complet aux fonctionnalités v1.0.
+
+Filigrane discret en bas à droite des sorties (« Simple Mapper »).
+
+1 seul projecteur actif à la fois.
+
+4.6.2 Version Pro (achat unique)
+Suppression du filigrane.
+
+Jusqu'à 4 projecteurs.
+
+Export sans limite.
+
+Prix cible : 39 € TTC (à valider selon tests utilisateurs).
+
+Système : clé de licence locale (code d'activation) en v1.0 (pas de serveur).
+
+5. Exigences non-fonctionnelles
+5.1 Performance
+Métrique	Cible	Seuil acceptable
+Temps de chargement initial	< 2 s	< 4 s
+FPS éditeur (surface 8×8 + vidéo)	60	> 45
+FPS sortie projecteur	60	> 50
+Latence éditeur → sortie	< 100 ms	< 200 ms
+Consommation RAM (état 10 surfaces + 3 vidéos)	< 800 Mo	< 1,5 Go
+Taille du HTML final (hors médias)	< 200 Ko	< 400 Ko
+5.2 Compatibilité
+Navigateur	Version minimale	Statut v1.0
+Chrome / Edge	110+	✅ Support complet
+Firefox	115+	✅ Support complet
+Safari (macOS)	16.4+	✅ Support complet
+Safari (iOS/iPadOS)	16.4+	⚠️ Support (test tactile requis)
+Firefox Android	115+	⚠️ Support partiel
+Chrome Android	110+	✅ Support complet
+Non supporté : IE, navigateurs < 2 ans.
+
+5.3 Sécurité et vie privée
+Aucune donnée n'est envoyée à un serveur par défaut (v1.0).
+
+Tous les médias restent locaux (dataURL en mémoire, localStorage pour l'état).
+
+Pas de télémétrie intrusive ; si analytics, utiliser Plausible ou Matomo self-hosted.
+
+Mention claire dans la landing page : « Vos médias ne quittent jamais votre appareil. »
+
+5.4 Accessibilité
+Contraste WCAG AA sur l'interface.
+
+Navigation clavier complète (tabindex, focus visible).
+
+prefers-reduced-motion respecté pour les animations non-essentielles.
+
+Alternatives textuelles pour les icônes (title attributs).
+
+5.5 Internationalisation
+v1.0 : français uniquement.
+
+v1.5 : anglais + français (architecture i18n à prévoir dès v1.0).
+
+Format des nombres adapté aux locales.
+
+6. Contraintes techniques
+6.1 Stack imposée
+Langage : HTML5 / CSS3 / JavaScript ES2022.
+
+Rendu : Three.js (WebGL 2) pour le mesh warping et le rendu vidéo.
+
+Compression ZIP : JSZip.
+
+Pas de build step obligatoire : import maps + modules ES natifs (pour distribution « un seul fichier »).
+
+Option bundling : esbuild ou Vite pour les releases optimisées.
+
+6.2 Architecture applicative
+Fichier unique pour la v1.0 (distribuable directement).
+
+Séparation logique dans le code (classes Surface, ProjectorManager, History, MediaLibrary).
+
+State sérialisable à tout moment (fonction serializeState()).
+
+Communication inter-fenêtres : BroadcastChannel (fallback localStorage polling si non supporté).
+
+6.3 Contraintes de distribution
+Hébergement : GitHub Pages (statique) + Cloudflare Pages en backup.
+
+Pas de backend en v1.0 (aucune authentification, aucune API).
+
+Mode offline :
+
+Option A : téléchargement du fichier HTML + vendor libs en local.
+
+Option B (v1.5) : PWA avec service worker.
+
+6.4 Contraintes de licence
+Code open-source sous MIT ou Apache 2.0 (à décider — recommandation : MIT pour adoption maximale).
+
+Three.js : MIT ✅ compatible.
+
+JSZip : MIT ou GPLv3 ✅ compatible avec MIT.
+
+7. Planning et phasage
+7.1 Roadmap v1.0 → v2.0
+Phase	Durée	Livrables
+Sprint 0 : Cadrage	1 semaine	Ce cahier des charges, maquettes Figma, backlog priorisé
+Sprint 1 : Cœur fonctionnel	3 semaines	Warp mesh, création surfaces, import médias, undo/redo
+Sprint 2 : Multi-projecteurs	2 semaines	Régions, edge blending, sync, preview éditeur
+Sprint 3 : Sauvegarde & UX	2 semaines	Export ZIP, autosave, tutoriel, raccourcis, responsive
+Sprint 4 : Polish & QA	2 semaines	Tests cross-browser, optimisation perf, corrections bugs
+Sprint 5 : Landing & bêta	1 semaine	Landing page, démo vidéo, déploiement bêta privée
+Sprint 6 : Retours bêta	2 semaines	Corrections des 20 testeurs, ajustements UX
+Lancement v1.0	—	Publication publique
+v1.5 (T+2 mois)	3 mois	Effets shader, contenu génératif, i18n, PWA, snap
+v2.0 (T+6 mois)	6 mois	Polygones, masques, compte cloud (si demandé)
+Total v1.0 : ~13 semaines en solo, ~8 semaines en équipe de 2.
+
+7.2 Jalons critiques
+M1 (S1) : première projection fonctionnelle démontrable.
+
+M2 (S3) : multi-projecteurs avec blend validé sur 2 écrans physiques.
+
+M3 (S5) : bêta privée (20 testeurs).
+
+M4 (S6) : feu vert au lancement public.
+
+8. Critères d'acceptation globaux (v1.0)
+La v1.0 sera considérée shippable si :
+
+✅ Un utilisateur novice crée sa première projection en < 5 min sans manuel.
+
+✅ Le rendu multi-projecteurs (2 projecteurs, chevauchement 10 %) est imperceptible à 1 m.
+
+✅ Le fichier HTML fonctionne sur Chrome, Firefox et Safari (desktop).
+
+✅ La sauvegarde ZIP est restaurable à l'identique (surfaces + médias + projecteurs).
+
+✅ Aucun crash ou erreur bloquante sur 8 h d'utilisation continue (test terrain).
+
+✅ Le tutoriel au premier lancement est complété par 80 % des testeurs.
+
+✅ Le taux de rétention J+7 sur les 20 bêta-testeurs est > 30 %.
+
+9. Risques et mitigation
+Risque	Impact	Probabilité	Mitigation
+Perf dégradée sur GPU faibles	Élevé	Moyenne	Détection matériel + baisse résolution
+Bug de sync multi-fenêtres	Élevé	Moyenne	Tests automatisés + fallback polling
+Quota localStorage dépassé (vidéos 100 Mo)	Moyen	Élevée	Compression, warning utilisateur, ZIP recommandé
+Popups bloquées par navigateur	Élevé	Élevée	Message explicite, guide de déblocage, test navigateur
+Confusion « projet ouvert » vs « nouveau »	Moyen	Moyenne	Écran d'accueil avec choix explicite en v1.5
+Concurrence (Lazy Lighting desktop si sort)	Élevé	Faible	Différenciation : simplicité + web + offline
+Sous-estimation du travail sur tablette	Moyen	Moyenne	Prototype tactile dès Sprint 2, budget +2 semaines
+Code open-source copié sans contribution	Faible	Élevée	Accepté (MIT), priorité à la notoriété
+10. Livrables attendus
+10.1 Livrables techniques
+✅ Fichier simple-mapper.html (auto-suffisant, < 200 Ko).
+
+✅ Dossier vendor/ (three.module.js, jszip.min.js) pour mode offline.
+
+✅ Dépôt GitHub public avec README d'installation.
+
+✅ Script de déploiement (GitHub Pages).
+
+✅ Jeu de 5 projets de démo (demos/*.zip).
+
+10.2 Livrables produit
+✅ Landing page (index.html) avec démo vidéo 30 s.
+
+✅ Guide utilisateur (docs/guide.md) — 10 pages max.
+
+✅ FAQ (10 questions fréquentes).
+
+✅ Vidéo tutoriel YouTube (2 min).
+
+10.3 Livrables business
+✅ Page de paiement Pro (Stripe Payment Link ou Gumroad).
+
+✅ Politique de confidentialité (RGPD).
+
+✅ Mentions légales.
+
+11. Gouvernance et suivi
+11.1 Méthodologie
+Sprints de 1 semaine avec revue hebdomadaire.
+
+Backlog géré sur GitHub Projects (colonnes Backlog, Sprint, In progress, Done).
+
+Chaque PR doit référencer une issue du backlog.
+
+Chaque release suit Semantic Versioning (v1.0.0, v1.1.0, etc.).
+
+11.2 Rituels
+Lundi : planification du sprint.
+
+Vendredi : démo interne + rétrospective.
+
+Mensuel : revue des métriques et ajustement de la roadmap.
+
+11.3 Canaux
+Issues GitHub : bugs et features.
+
+Discussions GitHub : questions utilisateurs et roadmap.
+
+Newsletter : annonce des releases (v1.5, v2.0).
+
+12. Annexes
+12.1 Glossaire
+Warping / mesh : déformation d'une image via une grille de points.
+
+Edge blending : atténuation progressive des bords pour fusionner deux projections.
+
+Keystone : correction trapézoïdale (4 coins).
+
+Projecteur : dans Simple Mapper, une fenêtre de sortie dédiée.
+
+Sur surface : un élément déformable contenant un média.
+
+DataURL : encodage base64 d'un fichier en chaîne de caractères.
+
+12.2 Inspirations et références
+Lazy Lighting (benchmark mobile)
+
+SurfaBeam (benchmark précision)
+
+HeavyM (benchmark simplicité desktop)
+
+MadMapper (référence pro)
+
+p5.mapper (inspiration technique open-source)
+
+12.3 Documents liés
+maquettes.fig (Figma) — wireframes et design system
+
+backlog.csv — backlog détaillé priorisé
+
+tests-plan.md — plan de tests QA
+
+landing-copy.md — textes de la landing page
+
+Fin du cahier des charges — v1.0
+
+Ce document est vivant : il sera mis à jour à chaque fin de sprint en fonction des retours terrain et des découvertes techniques. Toute modification majeure du périmètre doit être validée par le comité produit (Product Owner + Tech Lead + 1 utilisateur bêta).

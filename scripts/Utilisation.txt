@@ -1,0 +1,119 @@
+Installation initiale
+bash
+# 1. Installer la dépendance de build
+npm install
+
+# 2. (Optionnel) Pré-télécharger les vendor deps
+npm run vendor
+Build
+bash
+# Build les deux versions (offline + lite)
+npm run build
+
+# Build offline uniquement (recommandé pour événements)
+npm run build:offline
+
+# Build lite uniquement (CDN, plus petit)
+npm run build:lite
+
+# Build sans supprimer dist/ (conserve les anciens)
+npm run build:keep
+
+# Nettoyer dist/
+npm run clean
+Tester le résultat
+bash
+npm run serve:dist
+# Ouvrir http://localhost:8000/simple-mapper-offline-v1.0.0/index.html
+📊 Sortie attendue
+Après npm run build, vous verrez :
+
+text
+🎯 Simple Mapper — Build v1.0.0
+   29 octobre 2026 · Node v20.10.0
+
+▶ Vérification du projet
+  ✓ Structure valide
+  ℹ Nettoyage de dist/…
+
+▶ Build offline → simple-mapper-offline-v1.0.0
+  ✓ Dossier créé : dist/simple-mapper-offline-v1.0.0
+  ✓ 4 fichiers racine copiés
+  ✓ 4 dossiers copiés
+  ℹ Téléchargement : https://unpkg.com/three@0.160.0/build/three.module.js
+  ✓ Sauvegardé : three.module.js (680.4 KB)
+  ℹ Téléchargement : https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js
+  ✓ Sauvegardé : jszip.min.js (98.2 KB)
+  ✓ app.html patché (2 référence(s) CDN → vendor/)
+  ✓ INSTALL.md généré
+  ℹ Création de l'archive…
+  ✓ ZIP créé : 234.5 KB
+  SHA256 : a1b2c3d4e5f6…
+
+▶ Build lite → simple-mapper-lite-v1.0.0
+  ✓ Dossier créé : dist/simple-mapper-lite-v1.0.0
+  ✓ 4 fichiers racine copiés
+  ✓ 4 dossiers copiés
+  ✓ INSTALL.md généré
+  ℹ Création de l'archive…
+  ✓ ZIP créé : 45.2 KB
+  SHA256 : f6e5d4c3b2a1…
+
+✅ Build terminé en 3.21s
+
+📦 Artefacts disponibles dans dist/ :
+
+  simple-mapper-offline-v1.0.0.zip
+    Taille : 234.5 KB
+    SHA256 : a1b2c3d4e5f6…
+    Dossier : dist/simple-mapper-offline-v1.0.0/
+
+  simple-mapper-lite-v1.0.0.zip
+    Taille : 45.2 KB
+    SHA256 : f6e5d3c4b2a1…
+    Dossier : dist/simple-mapper-lite-v1.0.0/
+
+Pour tester : npm run serve:dist
+Puis ouvrir : http://localhost:8000/simple-mapper-offline-v1.0.0/index.html
+📁 Structure finale du dépôt
+text
+simple-mapper/
+├── package.json
+├── .gitignore
+├── README.md
+├── LICENSE
+├── index.html
+├── app.html
+├── scripts/
+│   ├── build.js              # Script de build principal
+│   └── vendor.js             # Téléchargement des vendor deps
+├── assets/
+│   └── README.md
+├── vendor/                   # Cache local (ignoré par git, sauf README)
+│   ├── README.md
+│   ├── three.module.js       # ← téléchargé automatiquement
+│   └── jszip.min.js          # ← téléchargé automatiquement
+├── docs/
+│   └── guide.md
+├── legal/
+│   ├── privacy.html
+│   └── terms.html
+└── demos/
+    ├── README.md
+    ├── index.html
+    ├── halloween.json
+    ├── facade.json
+    ├── mariage.json
+    ├── noel.json
+    ├── concert.json
+    └── vitrine.json
+Après npm run build, un dossier dist/ apparaît (ignoré par git) contenant :
+
+text
+dist/
+├── simple-mapper-offline-v1.0.0/
+├── simple-mapper-offline-v1.0.0.zip
+├── simple-mapper-offline-v1.0.0.zip.sha256
+├── simple-mapper-lite-v1.0.0/
+├── simple-mapper-lite-v1.0.0.zip
+└── simple-mapper-lite-v1.0.0.zip.sha256

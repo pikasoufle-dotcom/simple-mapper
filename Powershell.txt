@@ -1,0 +1,1 @@
+Ouvrir http://localhost:8002/index.html (landing page) ou http://localhost:8002/app.html
